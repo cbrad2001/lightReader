@@ -1,5 +1,8 @@
+#include "sampler.c"
+#include "potentiometer.h"
 
-
+static double *historyBuffer;
+static size_t historySize;
 
 
 void Sampler_startSampling(void)
