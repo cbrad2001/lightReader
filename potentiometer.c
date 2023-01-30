@@ -6,16 +6,12 @@
 #include <pthread.h>
 #include <unistd.h>
 
-static int potRawValue;
-static pthread_t potID;
-static bool sampling;
-
-static void Pot_updateRawValue(void)
+int Pot_getRawValue(void)
 {
-    FILE *potVoltage = fopen(POT_VOLTAGE_PATH, "r");
+    FILE *potVoltageFile = fopen(POT_VOLTAGE_PATH, "r");
     bool fileStatus = true;
 
-    if (potVoltage == NULL)
+    if (potVoltageFile == NULL)
     {
         fprintf(stderr, "Error reading the voltage for the POT.\n");
         fileStatus = false;
@@ -24,24 +20,14 @@ static void Pot_updateRawValue(void)
     const int MAX_LENGTH = 1024;
     char buf[MAX_LENGTH];
     fgets(buf, MAX_LENGTH, potVoltage);
-    int voltageVal = atoi(buf);
+    int voltageVal = atoi(buf); // Potential TODO: error check atoi
 
     if (fileStatus == false)
     {
         voltageVal = -1;
     }
 
-    static pthread_mutex_t rawValMutex = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_lock(&rawValMutex);
-    {
-        potRawValue = voltageVal;
-    }
-    pthread_mutex_unlock(&rawValMutex);
-}
-
-int Pot_getRawValue(void)
-{
-    return potRawValue;
+    return voltageVal;
 }
 
 double Pot_getVoltage(void)
@@ -57,27 +43,4 @@ double Pot_getVoltage(void)
     double voltage = (rawValue / MAX_VALUE) * REF_VOLT;
 
     return voltage;
-}
-
-static void *potThread(void *vargp)
-{
-    while (sampling)
-    {
-        Pot_updateRawValue();
-        usleep(1000);
-    }
-    printf("POT is now not being sampled.");
-}
-
-void Pot_startSampling(void)
-{
-    sampling = true;
-    pthread_create(&potID, NULL, potThread, NULL);
-}
-
-void Pot_stopSampling(void)
-{
-    sampling = false;
-    printf("Stopping the thread for reading the POT.")
-    pthread_join(potID, NULL);
 }

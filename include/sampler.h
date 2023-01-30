@@ -13,6 +13,10 @@ void Sampler_stopSampling(void);
 void Sampler_setHistorySize(int newSize);
 int Sampler_getHistorySize(void);
 
+// Starts/ends the thread that updates the buffer size once per second.
+void Sampler_startBufferSizeUpdate(void);
+void Sampler_stopBufferSizeUpdate(void);
+
 // Get a copy of the samples in the sample history.
 // Returns a newly allocated array and sets `length` to be the
 // number of elements in the returned array (output-only parameter).

@@ -19,8 +19,4 @@ int Pot_getRawValue(void);
 // Note that the POT value itself is only updated once per second in this program.
 double Pot_getVoltage(void);
 
-// Starts/ends the thread that reads the POT once per second in the background.
-void Pot_startSampling(void);
-void Pot_stopSampling(void);
-
 #endif
