@@ -25,7 +25,7 @@ void Sampler_startSampling(void)
     isSampling = true;
     totalSamples = 0;
 
-    historyBuffer = (double *)malloc(Pot_getRawValue() * sizeof(double));
+    historyBuffer = (double *)malloc(Pot_getRawValue() * sizeof(double));   //dynamic array for circular buffer
 
     pthread_create(&samplingThreadID, NULL, &samplingThread, NULL);
 }
@@ -37,7 +37,7 @@ void Sampler_stopSampling(void)
     pthread_mutex_destroy(&historySizeMutex);
     isSampling = false;
 
-    free(historyBuffer);
+    free(historyBuffer);            
 
     pthread_join(samplingThreadID, NULL);
 }
@@ -96,10 +96,27 @@ double* Sampler_getHistory(int length)
 
 int Sampler_getNumSamplesInHistory()
 {
+    int taken = Sampler_getNumSamplesTaken();
+    int hsize = Sampler_getHistorySize();
+    
+    return (taken > hsize) ? taken : hsize;
+
 }
 
 double Sampler_getAverageReading(void)
 {
+
+    //improve for "Exponential smoothing"... should be covered next lecture... this is just a temporary stopgap
+    double sum,avg = 0;
+    for (int i = 0; i < Sampler_getHistorySize(); i++){
+        sum += historyBuffer[i];
+    }
+    avg = (sum / Sampler_getNumSamplesInHistory());
+
+    // weights previous average at 99.9% 
+    // avg = avg * 0.999
+
+    return avg;
 }
 
 long long Sampler_getNumSamplesTaken(void)
@@ -112,12 +129,10 @@ static void* samplingThread(void *vargp)
 {
     while (isSampling)
     {
-        Sampler_setHistorySize(Pot_getRawValue());
-
-        double voltage = LightRead_getVoltage();
-        printf("Light value: %.3f", voltage); // temp
+        Sampler_setHistorySize(Pot_getRawValue());  // count potentiometer value 
         totalSamples++;
-        sleep(1); // busy wait (sleep 1s between samples)
+
     }
     printf("Sampling has now stopped.\n");
+    return 0;
 }

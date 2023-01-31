@@ -3,6 +3,8 @@
 #include <stdio.h>
 
 #include "include/potentiometer.h"
+#include "include/photoresistor.h"
+#include "include/sampler.h"
 
 /*
  * noworky.c
@@ -52,40 +54,46 @@ void displayArrays(double *source, double *target, int size)
  */
 int main()
 {
-	unsigned int i;
-	double *source, *target;
-	printf("noworky: by Brian Fraser\n");
+	PhotoRes_startSampling();
+	Sampler_startSampling();
+	
+	Sampler_stopSampling();
+	PhotoRes_stopSampling();
 
-	// Allocate the arrays:
-	source = malloc(sizeof(*source) * NUM_ELEMENTS);
-	target = malloc(sizeof(*target) * NUM_ELEMENTS);
+	// unsigned int i;
+	// double *source, *target;
+	// printf("noworky: by Brian Fraser\n");
 
-	if (!source || !target) {
-		printf("ERROR: Allocation failed.\n");
-	}
+	// // Allocate the arrays:
+	// source = malloc(sizeof(*source) * NUM_ELEMENTS);
+	// target = malloc(sizeof(*target) * NUM_ELEMENTS);
 
-	// Initialize the arrays
-	for (i=0; i < NUM_ELEMENTS; i++) {
-		source[i] = i * 2.0;
-		target[i] = i * 10.0;
-	}
+	// if (!source || !target) {
+	// 	printf("ERROR: Allocation failed.\n");
+	// }
 
-	// Display them
-	printf("Initial values: \n");
-	displayArrays(source, target, NUM_ELEMENTS);
+	// // Initialize the arrays
+	// for (i=0; i < NUM_ELEMENTS; i++) {
+	// 	source[i] = i * 2.0;
+	// 	target[i] = i * 10.0;
+	// }
 
-	// Swap their contents
-	tradeArrays(source, target, NUM_ELEMENTS);
+	// // Display them
+	// printf("Initial values: \n");
+	// displayArrays(source, target, NUM_ELEMENTS);
 
-	// Display them
-	printf("Final values: \n");
-	displayArrays(source, target, NUM_ELEMENTS);
+	// // Swap their contents
+	// tradeArrays(source, target, NUM_ELEMENTS);
 
-	// Clean up.
-	free(source);
-	free(target);
+	// // Display them
+	// printf("Final values: \n");
+	// displayArrays(source, target, NUM_ELEMENTS);
 
-	printf("Done.\n");
+	// // Clean up.
+	// free(source);
+	// free(target);
+
+	// printf("Done.\n");
 
 	return 0;
 }
