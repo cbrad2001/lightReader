@@ -1,4 +1,4 @@
-#include "potentiometer.h"
+#include "include/potentiometer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +11,7 @@ int Pot_getRawValue(void)
     FILE *potVoltageFile = fopen(POT_VOLTAGE_PATH, "r");
     bool fileStatus = true;
 
-    if (potVoltageFile == NULL)
+    if (!potVoltageFile)
     {
         fprintf(stderr, "Error reading the voltage for the POT.\n");
         fileStatus = false;
@@ -19,7 +19,7 @@ int Pot_getRawValue(void)
 
     const int MAX_LENGTH = 1024;
     char buf[MAX_LENGTH];
-    fgets(buf, MAX_LENGTH, potVoltage);
+    fgets(buf, MAX_LENGTH, potVoltageFile);
     int voltageVal = atoi(buf); // Potential TODO: error check atoi
 
     if (fileStatus == false)

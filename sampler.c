@@ -1,5 +1,5 @@
-#include "sampler.h"
-#include "potentiometer.h"
+#include "include/sampler.h"
+#include "include/potentiometer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,19 +14,19 @@ static pthread_t bufferThreadID, samplingThreadID;
 static pthread_mutex_t historyBufferMutex, historySizeMutex;
 static bool isUpdatingBuffer;
 static double *historyBuffer;
-static size_t historySize;
+static size_t historySize, totalSamples;
 
 
 void Sampler_startSampling(void)
 {
-
+    totalSamples = 0;
+    pthread_create(&samplingThreadID, NULL, &samplingThread, NULL);
 }
 
 void Sampler_stopSampling(void)
 {
-
+    pthread_join(samplingThreadID, NULL);
 }
-
 
 void Sampler_setHistorySize(int newSize)
 {
@@ -100,5 +100,11 @@ static void *bufferSizeThread(void *vargp)
 
 static void *samplingThread(void *vargp)
 {
-
+    while(1){
+        double voltage = Pot_getVoltage();
+	    printf("Light value: %.3f",voltage);    //temp
+        totalSamples++;
+        sleep(1);                               //busy wait (sleep 1s between samples)
+    }
+    return NULL;
 }
