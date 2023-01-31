@@ -15,7 +15,8 @@ static pthread_t samplingThreadID;
 static pthread_mutex_t historyBufferMutex, historySizeMutex;
 static bool isSampling;
 static double *historyBuffer;
-static size_t historySize, totalSamples;
+static size_t historySize;
+static long long totalSamples;
 
 void Sampler_startSampling(void)
 {
@@ -92,6 +93,7 @@ double Sampler_getAverageReading(void)
 
 long long Sampler_getNumSamplesTaken(void)
 {
+    return totalSamples;
 }
 
 // Private thread implementations
