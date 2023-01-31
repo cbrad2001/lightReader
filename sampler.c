@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 // Function for the thread to sample the light level.
-static void *samplingThread(void *vargp);
+static void* samplingThread(void *vargp);
 
 static pthread_t samplingThreadID;
 static pthread_mutex_t historyBufferMutex, historySizeMutex;
@@ -23,6 +23,9 @@ void Sampler_startSampling(void)
     pthread_mutex_init(&historySizeMutex, NULL);
     isSampling = true;
     totalSamples = 0;
+
+    historyBuffer = (double *)malloc(Pot_getRawValue() * sizeof(double));
+
     pthread_create(&samplingThreadID, NULL, &samplingThread, NULL);
 }
 
@@ -32,6 +35,9 @@ void Sampler_stopSampling(void)
     pthread_mutex_destroy(&historyBufferMutex);
     pthread_mutex_destroy(&historySizeMutex);
     isSampling = false;
+
+    free(historyBuffer);
+
     pthread_join(samplingThreadID, NULL);
 }
 
@@ -43,9 +49,13 @@ void Sampler_setHistorySize(int newSize)
     }
     pthread_mutex_unlock(&historySizeMutex);
 
+    double *newBuffer = Sampler_getHistory(Pot_getRawValue());
     pthread_mutex_lock(&historyBufferMutex);
     {
         // TODO: update the buffer here
+        double *oldBuffer = historyBuffer;
+        free(oldBuffer);
+        historyBuffer = newBuffer;
     }
     pthread_mutex_unlock(&historyBufferMutex);
 }
@@ -61,10 +71,15 @@ int Sampler_getHistorySize(void)
     return toReturn;
 }
 
-double *Sampler_getHistory(int *length)
+double* Sampler_getHistory(int length)
 {
     // A smart pointer would be nice...
-    // return historyBuffer;
+    double *historyCopy = malloc(length * sizeof(double));
+    for (int i = 0; i < length; i++)
+    {
+        historyCopy[i] = historyBuffer[i];
+    }
+    return historyCopy;
 }
 
 int Sampler_getNumSamplesInHistory()
@@ -80,7 +95,7 @@ long long Sampler_getNumSamplesTaken(void)
 }
 
 // Private thread implementations
-static void *samplingThread(void *vargp)
+static void* samplingThread(void *vargp)
 {
     while (isSampling)
     {

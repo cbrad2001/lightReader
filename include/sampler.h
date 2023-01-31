@@ -18,7 +18,7 @@ int Sampler_getHistorySize(void);
 // number of elements in the returned array (output-only parameter).
 // The calling code must call free() on the returned pointer.
 // Note: provides both data and size to ensure consistency.
-double* Sampler_getHistory(int *length);
+double* Sampler_getHistory(int length);
 
 // Returns how many valid samples are currently in the history.
 // May be less than the history size if the history is not yet full.
