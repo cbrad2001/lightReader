@@ -17,6 +17,8 @@ int Sampler_getHistorySize(void);
 // Returns a newly allocated array and sets `length` to be the
 // number of elements in the returned array (output-only parameter).
 // The calling code must call free() on the returned pointer.
+// If the length > current history size, then the returned history size will be
+// trimmed to the current history size.
 // Note: provides both data and size to ensure consistency.
 double* Sampler_getHistory(int length);
 

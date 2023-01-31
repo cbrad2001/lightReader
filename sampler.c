@@ -74,9 +74,20 @@ int Sampler_getHistorySize(void)
 
 double* Sampler_getHistory(int length)
 {
+    int checkedLength;
+
+    if (length > Sampler_getHistorySize())
+    {
+        checkedLength = Sampler_getHistorySize();
+    }
+    else
+    {
+        checkedLength = length;
+    }
+
     // A smart pointer would be nice...
-    double *historyCopy = malloc(length * sizeof(double));
-    for (int i = 0; i < length; i++)
+    double *historyCopy = malloc(checkedLength * sizeof(double));
+    for (int i = 0; i < checkedLength; i++)
     {
         historyCopy[i] = historyBuffer[i];
     }
