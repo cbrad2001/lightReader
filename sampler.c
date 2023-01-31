@@ -1,5 +1,6 @@
 #include "include/sampler.h"
 #include "include/potentiometer.h"
+#include "include/photoresistor.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,24 +8,30 @@
 #include <pthread.h>
 #include <unistd.h>
 
-static void *bufferSizeThread(void *vargp);
+// Function for the thread to sample the light level.
 static void *samplingThread(void *vargp);
 
-static pthread_t bufferThreadID, samplingThreadID;
+static pthread_t samplingThreadID;
 static pthread_mutex_t historyBufferMutex, historySizeMutex;
-static bool isUpdatingBuffer;
+static bool isSampling;
 static double *historyBuffer;
 static size_t historySize, totalSamples;
 
-
 void Sampler_startSampling(void)
 {
+    pthread_mutex_init(&historyBufferMutex, NULL);
+    pthread_mutex_init(&historySizeMutex, NULL);
+    isSampling = true;
     totalSamples = 0;
     pthread_create(&samplingThreadID, NULL, &samplingThread, NULL);
 }
 
 void Sampler_stopSampling(void)
 {
+    printf("Stopping the thread for updating the buffer size for samples.");
+    pthread_mutex_destroy(&historyBufferMutex);
+    pthread_mutex_destroy(&historySizeMutex);
+    isSampling = false;
     pthread_join(samplingThreadID, NULL);
 }
 
@@ -35,6 +42,12 @@ void Sampler_setHistorySize(int newSize)
         historySize = newSize;
     }
     pthread_mutex_unlock(&historySizeMutex);
+
+    pthread_mutex_lock(&historyBufferMutex);
+    {
+        // TODO: update the buffer here
+    }
+    pthread_mutex_unlock(&historyBufferMutex);
 }
 
 int Sampler_getHistorySize(void)
@@ -48,63 +61,35 @@ int Sampler_getHistorySize(void)
     return toReturn;
 }
 
-void Sampler_startBufferSizeUpdate(void)
+double *Sampler_getHistory(int *length)
 {
-    pthread_mutex_init(&historyBufferMutex, NULL);
-    pthread_mutex_init(&historySizeMutex, NULL);
-    isUpdatingBuffer = true;
-    pthread_create(&bufferThreadID, NULL, bufferSizeThread, NULL);
-}
-
-void Sampler_stopBufferSizeUpdate(void)
-{
-    printf("Stopping the thread for updating the buffer size for samples.");
-    pthread_mutex_destroy(&historyBufferMutex);
-    pthread_mutex_destroy(&historySizeMutex);
-    isUpdatingBuffer = false;
-    pthread_join(bufferThreadID, NULL);
-}
-
-double* Sampler_getHistory(int *length)
-{
-
+    // A smart pointer would be nice...
+    // return historyBuffer;
 }
 
 int Sampler_getNumSamplesInHistory()
 {
-
 }
-
 
 double Sampler_getAverageReading(void)
 {
-
 }
 
 long long Sampler_getNumSamplesTaken(void)
 {
-    
 }
 
 // Private thread implementations
-static void *bufferSizeThread(void *vargp)
-{
-    while (isUpdatingBuffer)
-    {
-        Sampler_setHistorySize(Pot_getRawValue());
-        // TODO: update the size of the buffer itself
-        usleep(1000);
-    }
-    printf("POT is now not being sampled.");
-}
-
 static void *samplingThread(void *vargp)
 {
-    while(1){
-        double voltage = Pot_getVoltage();
-	    printf("Light value: %.3f",voltage);    //temp
+    while (isSampling)
+    {
+        Sampler_setHistorySize(Pot_getRawValue());
+
+        double voltage = LightRead_getVoltage();
+        printf("Light value: %.3f", voltage); // temp
         totalSamples++;
-        sleep(1);                               //busy wait (sleep 1s between samples)
+        sleep(1); // busy wait (sleep 1s between samples)
     }
-    return NULL;
+    printf("Sampling has now stopped.\n");
 }

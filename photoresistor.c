@@ -1,16 +1,16 @@
-#include "include/potentiometer.h"
+#include "include/photoresistor.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
 
-int Pot_getRawValue(void)
+int LightRead_getRawValue(void)
 {
-    FILE *potVoltageFile = fopen(POT_VOLTAGE_PATH, "r");
+    FILE *lightReadVoltageFile = fopen(LIGHTREAD_VOLTAGE_PATH, "r");
     bool fileStatus = true;
 
-    if (!potVoltageFile)
+    if (!lightReadVoltageFile)
     {
         fprintf(stderr, "Error reading the voltage for the POT.\n");
         fileStatus = false;
@@ -18,7 +18,7 @@ int Pot_getRawValue(void)
 
     const int MAX_LENGTH = 1024;
     char buf[MAX_LENGTH];
-    fgets(buf, MAX_LENGTH, potVoltageFile);
+    fgets(buf, MAX_LENGTH, lightReadVoltageFile);
     int voltageVal = atoi(buf); // Potential TODO: error check atoi
 
     if (fileStatus == false)
@@ -29,10 +29,10 @@ int Pot_getRawValue(void)
     return voltageVal;
 }
 
-double Pot_getVoltage(void)
+double LightRead_getVoltage(void)
 {
-    int rawValue = Pot_getRawValue();
-
+    int rawValue = LightRead_getRawValue();
+    
     if (rawValue == -1)
     {
         return -1;
