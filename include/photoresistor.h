@@ -18,9 +18,4 @@ int LightRead_getRawValue(void);
 // Returns -1 if there is an error reading the raw value of the photoresistor.
 double LightRead_getVoltage(void);
 
-
-void PhotoRes_startSampling(void);
-
-void PhotoRes_stopSampling(void);
-
 #endif

@@ -8,10 +8,13 @@
 #include <pthread.h>
 #include <unistd.h>
 
-// Function for the thread to sample the light level.
-static void* samplingThread(void *vargp);
+// Function for the thread to sample the POT and update the buffer size.
+static void* potThread(void *vargp);
 
-static pthread_t samplingThreadID;
+// Function for the thread to sample the photoresistor and add the reading to the buffer.
+static void* lightSamplingThread(void *vargp);
+
+static pthread_t potThreadID, lightThreadID;
 static pthread_mutex_t historyBufferMutex, historySizeMutex;
 static bool isSampling;
 // static double *historyBuffer;
@@ -65,20 +68,21 @@ void Sampler_startSampling(void)
 
     buff_init(&buffer);
 
-    pthread_create(&samplingThreadID, NULL, &samplingThread, NULL);
-    
+    pthread_create(&potThreadID, NULL, &potThread, NULL);
+    pthread_create(&lightThreadID, NULL, &lightSamplingThread, NULL);    
 }
 
 void Sampler_stopSampling(void)
 {
-    printf("Stopping the thread for updating the buffer size for samples.");
+    printf("Stopping the thread for sampling light level.\n");
     pthread_mutex_destroy(&historyBufferMutex);
     pthread_mutex_destroy(&historySizeMutex);
     isSampling = false;
 
     free(buffer.historyBuffer);            
 
-    pthread_join(samplingThreadID, NULL);
+    pthread_join(potThreadID, NULL);
+    pthread_join(lightThreadID, NULL);
 }
 
 void Sampler_setHistorySize(int newSize)
@@ -162,17 +166,35 @@ long long Sampler_getNumSamplesTaken(void)
     return totalSamples;
 }
 
-static void* samplingThread(void *vargp)
+static void* potThread(void *vargp)
 {
     while (isSampling)
     {
         printf("Raw potentiometer value: %.3i\n", Pot_getRawValue());
-        Sampler_setHistorySize(Pot_getVoltage());  // count potentiometer value 
+        Sampler_setHistorySize(Pot_getVoltage());  // count potentiometer value
+
+
+
         buffer.tail = Sampler_getHistorySize()-1;
         totalSamples++;
 
     }
-    printf("Sampling has now stopped.\n");
+    printf("Sampling of POT has now stopped.\n");
     return 0;
 }
 
+static void* lightSamplingThread(void *vargp)
+{
+    while(isSampling){
+
+        double current_lightRead_voltage = LightRead_getVoltage();
+        add_data(current_lightRead_voltage);
+            
+        //put the reading into the buffer
+        printf("Light value: %.4f\n", current_lightRead_voltage);         // temp for visual output
+        sleep(0.001);                                                   // between light samples, sleep for 1ms 
+    }
+    printf("Sampling of photoresistor has now stopped.\n");
+    return 0;
+
+}
