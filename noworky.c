@@ -54,11 +54,14 @@ void displayArrays(double *source, double *target, int size)
  */
 int main()
 {
-	PhotoRes_startSampling();
 	Sampler_startSampling();
+	PhotoRes_startSampling();
 	
-	Sampler_stopSampling();
+
+	
 	PhotoRes_stopSampling();
+	Sampler_stopSampling();
+	
 
 	// unsigned int i;
 	// double *source, *target;

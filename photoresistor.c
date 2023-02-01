@@ -55,7 +55,11 @@ double LightRead_getVoltage(void)
 
 void PhotoRes_startSampling(void){
     isSampling = true;
-    pthread_create(&lightThreadID, NULL, &lightSamplingThread, NULL);
+    if (pthread_create(&lightThreadID, NULL, &lightSamplingThread, NULL)!=0){
+        perror("pthread_create() error");
+        exit(1);
+    }
+    
 }
 
 void PhotoRes_stopSampling(void){
@@ -67,11 +71,11 @@ static void* lightSamplingThread(void *vargp)
     while(isSampling){
 
         double current_lightRead_voltage = LightRead_getVoltage();
+        add_data(current_lightRead_voltage);
+            
         //put the reading into the buffer
         printf("Light value: %.4f\n", current_lightRead_voltage);         // temp for visual output
         sleep(0.001);                                                   // between light samples, sleep for 1ms 
-        // totalSamples++;
-
     }
     printf("Sampling has now stopped.\n");
     return 0;
