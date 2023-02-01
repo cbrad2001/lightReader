@@ -41,8 +41,8 @@ static enum status buffer_pushback(circular_buffer *b, double pr_reading)
 
 static void buff_init(circular_buffer *b){
     b->head = 0;
-    b->tail = Sampler_getHistorySize() - 1; 
-    b->historySize = Sampler_getHistorySize(); 
+    b->tail = 0; 
+    b->historySize = 0; 
     b->historyBuffer = (double *)malloc(Pot_getRawValue() * sizeof(double));   //dynamic array for circular buffer
     printf("successfully initialized buffer\n");
 }
