@@ -8,11 +8,32 @@
 #include <pthread.h>
 #include <unistd.h>
 
+typedef struct light_sample
+{
+    bool isValid;
+    double value;
+} light_sample;
+
+//https://embedjournal.com/implementing-circular-buffer-embedded-c/ 
+typedef struct circular_buffer{
+    double *historyBuffer;
+    int tail;
+    int head;
+    int historySize;
+} circular_buffer; 
+
 // Function for the thread to sample the POT and update the buffer size.
 static void* potThread(void *vargp);
 
 // Function for the thread to sample the photoresistor and add the reading to the buffer.
 static void* lightSamplingThread(void *vargp);
+
+static void add_data(double pr_reading);
+
+typedef enum status{
+    SUCCESS,
+    FAIL
+} status;
 
 static pthread_t potThreadID, lightThreadID;
 static pthread_mutex_t historyBufferMutex, historySizeMutex;
@@ -20,15 +41,9 @@ static bool isSampling;
 // static double *historyBuffer;
 // static size_t historySize;
 static long long totalSamples;
-
-enum status{
-    SUCCESS,
-    FAIL
-} status;
-
 static circular_buffer buffer;
 
-static enum status buffer_pushback(circular_buffer *b, double pr_reading)
+static status buffer_pushback(circular_buffer *b, double pr_reading)
 {
     int next = b->head + 1; //pointer after write
     if (next >= b->historySize)
@@ -42,7 +57,8 @@ static enum status buffer_pushback(circular_buffer *b, double pr_reading)
     return SUCCESS;
 }
 
-static void buff_init(circular_buffer *b){
+static void buff_init(circular_buffer *b)
+{
     b->head = 0;
     b->tail = 0; 
     b->historySize = 0; 
@@ -50,8 +66,10 @@ static void buff_init(circular_buffer *b){
     printf("successfully initialized buffer\n");
 }
 
-void add_data(double pr_reading){
-    if (buffer_pushback(&buffer,pr_reading)==FAIL){
+static void add_data(double pr_reading)
+{
+    if (buffer_pushback(&buffer,pr_reading)==FAIL)
+    {
         printf("Error loading to buffer\n");
         printf("Final array size: %i\n",Sampler_getNumSamplesInHistory());
     }
@@ -173,11 +191,7 @@ static void* potThread(void *vargp)
         printf("Raw potentiometer value: %.3i\n", Pot_getRawValue());
         Sampler_setHistorySize(Pot_getVoltage());  // count potentiometer value
 
-
-
         buffer.tail = Sampler_getHistorySize()-1;
-        totalSamples++;
-
     }
     printf("Sampling of POT has now stopped.\n");
     return 0;

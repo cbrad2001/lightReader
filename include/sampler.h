@@ -5,17 +5,6 @@
 #ifndef _SAMPLER_H_
 #define _SAMPLER_H_
 
-enum status;
-
-//https://embedjournal.com/implementing-circular-buffer-embedded-c/ 
-typedef struct circular_buffer{
-    double *historyBuffer;
-    int tail;
-    int head;
-    int historySize;
-} circular_buffer; 
-
-void add_data(double pr_reading);
 // Begin/end the background thread which samples light levels.
 void Sampler_startSampling(void);
 void Sampler_stopSampling(void);
