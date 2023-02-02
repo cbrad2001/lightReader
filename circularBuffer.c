@@ -5,6 +5,7 @@
 #include <float.h>
 #include <stdio.h>
 #include <limits.h>
+#include <float.h>
 
 typedef enum status
 {
@@ -14,16 +15,25 @@ typedef enum status
 
 static status buffer_pushback(circular_buffer *b, double pr_reading)
 {
-    size_t next = b->head + 1; //pointer after write
-    if (next >= b->historySize)
+    size_t next = b->head + 1;      // pointer after write
+    if (next >= b->maxBufferSize)   // restart at first index once completely circled 
         next = 0;
     
-    if (next == b->tail)
-        return FAIL;
+    printf("next: %i\n",next);
 
-    b->historyBuffer[b->head] = pr_reading;
-    b->head = next;
+
+    // if (next == b->tail)            // 
+    //     return FAIL;
+
+    b->historyBuffer[b->head] = pr_reading;     // add data to buffer
+    b->head = next;                             // set front of array
     return SUCCESS;
+}
+
+static void dbl_memset(double *buffer, size_t size){
+    for (int i = 0; i < size; i++){
+        buffer[i] = -DBL_MAX;
+    }
 }
 
 void CircBuff_buffInit(circular_buffer *buffer, size_t size)
@@ -31,33 +41,34 @@ void CircBuff_buffInit(circular_buffer *buffer, size_t size)
     buffer->head = 0;
     buffer->historySize = 0; 
     buffer->maxBufferSize = size;
-    buffer->tail = size-1; 
+    // buffer->tail = size-1; 
     buffer->historyBuffer = (double*)malloc(size * sizeof(double));   //dynamic array for circular buffer
-    memset(buffer->historyBuffer, -INT_MAX, size);
-    printf("successfully initialized buffer of size %d\n", size);
+    dbl_memset(buffer->historyBuffer, size);
+    printf("Successfully initialized buffer of size %d\n", size);
 }
 
 void CircBuff_buffFree(circular_buffer *buffer)
 {
     buffer->head = 0;
-    buffer->tail = 0; 
+    // buffer->tail = 0; 
     buffer->historySize = 0; 
     buffer->maxBufferSize = 0;
     free(buffer->historyBuffer);
-    printf("successfully freed buffer\n");
+    printf("Successfully freed buffer\n");
 }
 
 void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 {
     double *oldBuf = buffer->historyBuffer;
     double *newBuf = (double*)malloc(size * sizeof(double));
-    memset(newBuf, -INT_MAX, size);
+    dbl_memset(buffer->historyBuffer, size);
     size_t oldBufSize = buffer->maxBufferSize;
 
     for (size_t i = 0; i < oldBufSize; i++)
     {
         newBuf[i] = oldBuf[i];
     }
+    buffer->maxBufferSize = size;
     free(oldBuf);
 }
 
