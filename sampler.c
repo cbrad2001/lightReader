@@ -1,6 +1,7 @@
 #include "include/sampler.h"
 #include "include/potentiometer.h"
 #include "include/photoresistor.h"
+#include "include/circularBuffer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,26 +9,11 @@
 #include <pthread.h>
 #include <unistd.h>
 
-//https://embedjournal.com/implementing-circular-buffer-embedded-c/ 
-typedef struct circular_buffer{
-    double *historyBuffer;
-    size_t tail;
-    size_t head;
-    size_t historySize;
-} circular_buffer; 
-
 // Function for the thread to sample the POT and update the buffer size.
 static void* potThread(void *vargp);
 
 // Function for the thread to sample the photoresistor and add the reading to the buffer.
 static void* lightSamplingThread(void *vargp);
-
-static void add_data(double pr_reading);
-
-typedef enum status{
-    SUCCESS,
-    FAIL
-} status;
 
 static pthread_t potThreadID, lightThreadID;
 static pthread_mutex_t historyBufferMutex, historySizeMutex;
@@ -37,39 +23,6 @@ static bool isSampling;
 static long long totalSamples;
 static circular_buffer buffer;
 
-static status buffer_pushback(circular_buffer *b, double pr_reading)
-{
-    size_t next = b->head + 1; //pointer after write
-    if (next >= b->historySize)
-        next = 0;
-    
-    if (next == b->tail)
-        return FAIL;
-
-    b->historyBuffer[b->head] = pr_reading;
-    b->head = next;
-    return SUCCESS;
-}
-
-static void buff_init(circular_buffer *b)
-{
-    b->head = 0;
-    b->tail = 0; 
-    b->historySize = 0; 
-    b->historyBuffer = (double *)malloc(Pot_getRawValue() * sizeof(double));   //dynamic array for circular buffer
-    printf("successfully initialized buffer\n");
-}
-
-static void add_data(double pr_reading)
-{
-    if (buffer_pushback(&buffer,pr_reading)==FAIL)
-    {
-        printf("Error loading to buffer\n");
-        printf("Final array size: %i\n",Sampler_getNumSamplesInHistory());
-    }
-}
-
-
 void Sampler_startSampling(void)
 {
     pthread_mutex_init(&historyBufferMutex, NULL);
@@ -78,7 +31,7 @@ void Sampler_startSampling(void)
     isSampling = true;
     totalSamples = 0;
 
-    buff_init(&buffer);
+    CircBuff_buffInit(&buffer, Pot_getRawValue());
 
     pthread_create(&potThreadID, NULL, &potThread, NULL);
     pthread_create(&lightThreadID, NULL, &lightSamplingThread, NULL);    
@@ -196,7 +149,7 @@ static void* lightSamplingThread(void *vargp)
     while(isSampling){
 
         double current_lightRead_voltage = LightRead_getVoltage();
-        add_data(current_lightRead_voltage);
+        CircBuff_addData(&buffer, current_lightRead_voltage);
             
         //put the reading into the buffer
         printf("Light value: %.4f\n", current_lightRead_voltage);         // temp for visual output
