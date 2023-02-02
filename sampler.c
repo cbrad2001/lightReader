@@ -44,9 +44,9 @@ void Sampler_startSampling(void)
 void Sampler_stopSampling(void)
 {
     printf("Stopping the thread for sampling light level.\n");
+    isSampling = false;
     pthread_mutex_destroy(&historyBufferMutex);
     pthread_mutex_destroy(&historySizeMutex);
-    isSampling = false;
 
     pthread_join(lightThreadID, NULL);
     pthread_join(potThreadID, NULL);
@@ -163,9 +163,9 @@ static void* potThread(void *vargp)
     while (1)
     {
         printf("Raw potentiometer value: %.3i\n", Pot_getRawValue());
-        Sampler_setHistorySize(Pot_getVoltage());  // count potentiometer value
+        int sz = Pot_getRawValue();
+        Sampler_setHistorySize(sz);  // count potentiometer value
 
-        buffer.tail = Sampler_getHistorySize()-1;
     }
     printf("Sampling of POT has now stopped.\n");
     return 0;

@@ -13,14 +13,33 @@ typedef enum status
     FAIL
 } status;
 
+static void dbl_memset(double *buffer, size_t size){
+    double max = DBL_MAX;
+    for (size_t i = 0; i < size; i++){
+        buffer[i] = max;
+    }
+}
+
+void CircBuff_buffInit(circular_buffer *buffer, double size)
+{
+    buffer->head = 0;
+    buffer->historySize = 0; 
+    buffer->maxBufferSize = size;
+    double* buff = (double*)malloc(size * sizeof(double));   //dynamic array for circular buffer
+    // buffer->tail = size-1; 
+    buffer->historyBuffer = buff;
+    dbl_memset(buffer->historyBuffer, size);
+    printf("Successfully initialized buffer of size %d\n", buffer->maxBufferSize);
+}
+
 static status buffer_pushback(circular_buffer *b, double pr_reading)
 {
-    size_t next = b->head + 1;      // pointer after write
-    if (next >= b->maxBufferSize)   // restart at first index once completely circled 
-        next = 0;
-    
-    printf("next: %i\n",next);
+    int next = b->head + 1;      // pointer after write
 
+    if (next >= b->maxBufferSize)  // restart at first index once completely circled 
+        next = 0;
+
+    printf("head: %i\n",b->head);
 
     // if (next == b->tail)            // 
     //     return FAIL;
@@ -30,22 +49,6 @@ static status buffer_pushback(circular_buffer *b, double pr_reading)
     return SUCCESS;
 }
 
-static void dbl_memset(double *buffer, size_t size){
-    for (int i = 0; i < size; i++){
-        buffer[i] = -DBL_MAX;
-    }
-}
-
-void CircBuff_buffInit(circular_buffer *buffer, size_t size)
-{
-    buffer->head = 0;
-    buffer->historySize = 0; 
-    buffer->maxBufferSize = size;
-    // buffer->tail = size-1; 
-    buffer->historyBuffer = (double*)malloc(size * sizeof(double));   //dynamic array for circular buffer
-    dbl_memset(buffer->historyBuffer, size);
-    printf("Successfully initialized buffer of size %d\n", size);
-}
 
 void CircBuff_buffFree(circular_buffer *buffer)
 {
@@ -57,25 +60,28 @@ void CircBuff_buffFree(circular_buffer *buffer)
     printf("Successfully freed buffer\n");
 }
 
-void CircBuff_buffResize(circular_buffer *buffer, size_t size)
+void CircBuff_buffResize(circular_buffer *buffer, double size)
 {
-    double *oldBuf = buffer->historyBuffer;
     size_t oldBufSize = buffer->maxBufferSize;
-
     if (oldBufSize == size) { return; } // don't resize
+    
+    double *oldBuf = buffer->historyBuffer;
+      
 
     size_t minBufSize = (size > oldBufSize) ? oldBufSize : size;
 
-    double *newBuf = (double*)malloc((size + 1) * sizeof(double));
-    dbl_memset(buffer->historyBuffer, size);
+    double *newBuf = (double*)malloc(size * sizeof(double));
+    dbl_memset(newBuf, size);
 
     for (size_t i = 0; i < minBufSize; i++)
     {
         newBuf[i] = oldBuf[i];
     }
     buffer->maxBufferSize = size;
+    buffer->historyBuffer = newBuf;
 
     free(oldBuf);
+    oldBuf = NULL;
 }
 
 void CircBuff_addData(circular_buffer *buffer, double pr_reading)

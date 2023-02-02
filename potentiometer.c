@@ -36,6 +36,8 @@ double Pot_getVoltage(void)
 
     if (rawValue == -1)
     {
+        fprintf(stderr, "Error reading the voltage for the POT.\n");
+        exit(1);
         return -1;
     }
 

@@ -39,6 +39,8 @@ double LightRead_getVoltage(void)
     
     if (rawValue == -1)
     {
+        fprintf(stderr, "Error reading the voltage for the photoresistor.\n");
+        exit(1);
         return -1;
     }
 
