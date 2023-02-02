@@ -9,6 +9,8 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#define EXPONENTIAL_WEIGHTING_VALUE 0.5
+
 // Function for the thread to sample the POT and update the buffer size.
 static void* potThread(void *vargp);
 
@@ -22,6 +24,8 @@ static bool isSampling;
 // static size_t historySize;
 static long long totalSamples;
 static circular_buffer buffer;
+
+static double filtered_average;     //average value based on exponential smoothing  (v.n)
 
 void Sampler_startSampling(void)
 {
@@ -44,10 +48,10 @@ void Sampler_stopSampling(void)
     pthread_mutex_destroy(&historySizeMutex);
     isSampling = false;
 
-    CircBuff_buffFree(&buffer);        
-
-    pthread_join(potThreadID, NULL);
     pthread_join(lightThreadID, NULL);
+    pthread_join(potThreadID, NULL);
+
+    CircBuff_buffFree(&buffer);  
 }
 
 void Sampler_setHistorySize(int newSize)
@@ -114,19 +118,38 @@ int Sampler_getNumSamplesInHistory()
 
 }
 
+// vn = a*sn + (1-a) * v.(n-1)
+static double exponential_smoothing(double sample_n, double prev_filter_value){
+    double current_weighted = EXPONENTIAL_WEIGHTING_VALUE * sample_n;
+    double history_weighted = (1-EXPONENTIAL_WEIGHTING_VALUE)*prev_filter_value;
+    double new_avg = current_weighted + history_weighted;
+    return new_avg;
+}
+
+static void update_Average_Reading(double newestSample){
+    //first case v.0 = s.0
+    if(!filtered_average){ 
+        filtered_average = newestSample;    //first case (average is the only value)
+    }
+
+    filtered_average = exponential_smoothing(newestSample,filtered_average);
+}
+
 double Sampler_getAverageReading(void)
 {
-    //improve for "Exponential smoothing"... should be covered next lecture... this is just a temporary stopgap
-    double sum,avg = 0;
-    for (int i = 0; i < Sampler_getHistorySize(); i++){
-        sum += buffer.historyBuffer[i];
-    }
-    avg = (sum / Sampler_getNumSamplesInHistory());
+    return filtered_average;
 
-    // weights previous average at 99.9% 
-    // avg = avg * 0.999
 
-    return avg;
+    // double sum,avg = 0;
+    // for (int i = 0; i < Sampler_getHistorySize(); i++){
+    //     sum += buffer.historyBuffer[i];
+    // }
+    // avg = (sum / Sampler_getNumSamplesInHistory());
+
+    // // weights previous average at 99.9% 
+    // // avg = avg * 0.999
+
+    // return avg;
 }
 
 long long Sampler_getNumSamplesTaken(void)
@@ -136,7 +159,8 @@ long long Sampler_getNumSamplesTaken(void)
 
 static void* potThread(void *vargp)
 {
-    while (isSampling)
+    //change 1 to isSampling
+    while (1)
     {
         printf("Raw potentiometer value: %.3i\n", Pot_getRawValue());
         Sampler_setHistorySize(Pot_getVoltage());  // count potentiometer value
@@ -149,13 +173,16 @@ static void* potThread(void *vargp)
 
 static void* lightSamplingThread(void *vargp)
 {
-    while(isSampling){
-
+    
+    while(1){
+        
         double current_lightRead_voltage = LightRead_getVoltage();
         CircBuff_addData(&buffer, current_lightRead_voltage);
+
+        update_Average_Reading(current_lightRead_voltage);              //keep track of average
             
         //put the reading into the buffer
-        printf("Light value: %.4f\n", current_lightRead_voltage);         // temp for visual output
+        printf("Light value: %.4f\n", current_lightRead_voltage);       // temp for visual output
         sleep(0.001);                                                   // between light samples, sleep for 1ms 
     }
     printf("Sampling of photoresistor has now stopped.\n");

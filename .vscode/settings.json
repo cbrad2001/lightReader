@@ -4,6 +4,7 @@
         "stdbool.h": "c",
         "stdlib.h": "c",
         "sampler.h": "c",
-        "pthread.h": "c"
+        "pthread.h": "c",
+        "circularbuffer.h": "c"
     }
 }
