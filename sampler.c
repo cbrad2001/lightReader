@@ -8,18 +8,12 @@
 #include <pthread.h>
 #include <unistd.h>
 
-typedef struct light_sample
-{
-    bool isValid;
-    double value;
-} light_sample;
-
 //https://embedjournal.com/implementing-circular-buffer-embedded-c/ 
 typedef struct circular_buffer{
     double *historyBuffer;
-    int tail;
-    int head;
-    int historySize;
+    size_t tail;
+    size_t head;
+    size_t historySize;
 } circular_buffer; 
 
 // Function for the thread to sample the POT and update the buffer size.
@@ -45,7 +39,7 @@ static circular_buffer buffer;
 
 static status buffer_pushback(circular_buffer *b, double pr_reading)
 {
-    int next = b->head + 1; //pointer after write
+    size_t next = b->head + 1; //pointer after write
     if (next >= b->historySize)
         next = 0;
     
