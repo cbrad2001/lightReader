@@ -1,5 +1,9 @@
 #include "include/circularBuffer.h"
 
+#include <stdlib.h>
+#include <string.h>
+#include <float.h>
+
 typedef enum status
 {
     SUCCESS,
@@ -20,13 +24,39 @@ static status buffer_pushback(circular_buffer *b, double pr_reading)
     return SUCCESS;
 }
 
-void CircBuff_buffInit(circular_buffer *buffer, int size)
+void CircBuff_buffInit(circular_buffer *buffer, size_t size)
 {
-    b->head = 0;
-    b->tail = 0; 
-    b->historySize = 0; 
-    b->historyBuffer = (double *)malloc(size * sizeof(double));   //dynamic array for circular buffer
+    buffer->head = 0;
+    buffer->tail = 0; 
+    buffer->historySize = 0; 
+    buffer->maxBufferSize = size;
+    buffer->historyBuffer = (double*)malloc(size * sizeof(double));   //dynamic array for circular buffer
+    memset(buffer->historyBuffer, -DBL_MAX, size);
     printf("successfully initialized buffer of size %d\n", size);
+}
+
+void CircBuff_buffFree(circular_buffer *buffer)
+{
+    buffer->head = 0;
+    buffer->tail = 0; 
+    buffer->historySize = 0; 
+    buffer->maxBufferSize = 0;
+    free(buffer->historyBuffer);
+    printf("successfully freed buffer\n", );
+}
+
+void CircBuff_buffResize(circular_buffer *buffer, size_t size)
+{
+    double *oldBuf = buffer->historyBuffer;
+    double *newBuf = (double*)malloc(size * sizeof(double));
+    memset(newBuf, -DBL_MAX, size);
+    size_t oldBufSize = buffer->maxBufferSize;
+
+    for (size_t i = 0; i < oldBufSize; i++)
+    {
+        newBuf[i] = oldBuf[i];
+    }
+    free(oldBuf);
 }
 
 void CircBuff_addData(circular_buffer *buffer, double pr_reading)

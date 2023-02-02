@@ -44,7 +44,7 @@ void Sampler_stopSampling(void)
     pthread_mutex_destroy(&historySizeMutex);
     isSampling = false;
 
-    free(buffer.historyBuffer);            
+    CircBuff_buffFree(&buffer);        
 
     pthread_join(potThreadID, NULL);
     pthread_join(lightThreadID, NULL);
@@ -58,13 +58,9 @@ void Sampler_setHistorySize(int newSize)
     }
     pthread_mutex_unlock(&historySizeMutex);
 
-    double *newBuffer = Sampler_getHistory(Pot_getRawValue());
     pthread_mutex_lock(&historyBufferMutex);
     {
-        // TODO: update the buffer here
-        double *oldBuffer = buffer.historyBuffer;
-        free(oldBuffer);
-        buffer.historyBuffer = newBuffer;
+        CircBuff_buffResize(&buffer, newSize);
     }
     pthread_mutex_unlock(&historyBufferMutex);
 }
@@ -82,24 +78,31 @@ int Sampler_getHistorySize(void)
 
 double* Sampler_getHistory(int length)
 {
-    int checkedLength;
+    // TODO: change the implementation to be in terms of the circular buffer
+    // Approach: define a getter function in the circularBuffer module
+    // that returns the double array from the order of head to tail
+    // The 373 in me is saying that Sampler module shouldn't know how to work with circular_buffer
+    // int checkedLength;
 
-    if (length > Sampler_getHistorySize())
-    {
-        checkedLength = Sampler_getHistorySize();
-    }
-    else
-    {
-        checkedLength = length;
-    }
+    // if (length > Sampler_getHistorySize())
+    // {
+    //     checkedLength = Sampler_getHistorySize();
+    // }
+    // else
+    // {
+    //     checkedLength = length;
+    // }
 
-    // A smart pointer would be nice...
-    double *historyCopy = malloc(checkedLength * sizeof(double));
-    for (int i = 0; i < checkedLength; i++)
-    {
-        historyCopy[i] = buffer.historyBuffer[i];
-    }
-    return historyCopy;
+    // // A smart pointer would be nice...
+    // double *historyCopy = malloc(checkedLength * sizeof(double));
+    // for (int i = 0; i < checkedLength; i++)
+    // {
+    //     historyCopy[i] = buffer.historyBuffer[i];
+    // }
+    // return historyCopy;
+
+    // STUB
+    return NULL;
 }
 
 int Sampler_getNumSamplesInHistory()
