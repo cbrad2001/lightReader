@@ -60,15 +60,21 @@ void CircBuff_buffFree(circular_buffer *buffer)
 void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 {
     double *oldBuf = buffer->historyBuffer;
-    double *newBuf = (double*)malloc(size * sizeof(double));
-    dbl_memset(buffer->historyBuffer, size);
     size_t oldBufSize = buffer->maxBufferSize;
 
-    for (size_t i = 0; i < oldBufSize; i++)
+    if (oldBufSize == size) { return; } // don't resize
+
+    size_t minBufSize = (size > oldBufSize) ? oldBufSize : size;
+
+    double *newBuf = (double*)malloc((size + 1) * sizeof(double));
+    dbl_memset(buffer->historyBuffer, size);
+
+    for (size_t i = 0; i < minBufSize; i++)
     {
         newBuf[i] = oldBuf[i];
     }
     buffer->maxBufferSize = size;
+
     free(oldBuf);
 }
 
