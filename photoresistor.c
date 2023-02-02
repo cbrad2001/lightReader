@@ -15,13 +15,14 @@ int LightRead_getRawValue(void)
 
     if (!lightReadVoltageFile)
     {
-        fprintf(stderr, "Error reading the voltage for the POT.\n");
+        fprintf(stderr, "Error reading the voltage for the photoresistor.\n");
         fileStatus = false;
     }
 
     const int MAX_LENGTH = 1024;
     char buf[MAX_LENGTH];
     fgets(buf, MAX_LENGTH, lightReadVoltageFile);
+    fclose(lightReadVoltageFile);
     int voltageVal = atoi(buf); // Potential TODO: error check atoi
 
     if (fileStatus == false)
