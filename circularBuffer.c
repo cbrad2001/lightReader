@@ -42,7 +42,7 @@ void CircBuff_buffFree(circular_buffer *buffer)
     buffer->historySize = 0; 
     buffer->maxBufferSize = 0;
     free(buffer->historyBuffer);
-    printf("successfully freed buffer\n", );
+    printf("successfully freed buffer\n");
 }
 
 void CircBuff_buffResize(circular_buffer *buffer, size_t size)
