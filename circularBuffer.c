@@ -39,8 +39,6 @@ static status buffer_pushback(circular_buffer *b, double pr_reading)
     if (next >= b->maxBufferSize)  // restart at first index once completely circled 
         next = 0;
 
-    printf("head: %i\n",b->head);
-
     // if (next == b->tail)            // 
     //     return FAIL;
 
@@ -65,13 +63,12 @@ void CircBuff_buffResize(circular_buffer *buffer, double size)
     size_t oldBufSize = buffer->maxBufferSize;
     if (oldBufSize == size) { return; } // don't resize
     
-    double *oldBuf = buffer->historyBuffer;
-      
+    double *oldBuf = buffer->historyBuffer; 
 
     size_t minBufSize = (size > oldBufSize) ? oldBufSize : size;
 
-    double *newBuf = (double*)malloc(size * sizeof(double));
-    dbl_memset(newBuf, size);
+    double *newBuf = (double*)malloc((size+1) * sizeof(double));
+    dbl_memset(newBuf, size+1);
 
     for (size_t i = 0; i < minBufSize; i++)
     {

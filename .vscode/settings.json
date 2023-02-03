@@ -5,6 +5,8 @@
         "stdlib.h": "c",
         "sampler.h": "c",
         "pthread.h": "c",
-        "circularbuffer.h": "c"
+        "circularbuffer.h": "c",
+        "potentiometer.h": "c",
+        "stdio.h": "c"
     }
 }

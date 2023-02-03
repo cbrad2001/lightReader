@@ -8,8 +8,10 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <limits.h>
+#include <float.h>
 
-#define EXPONENTIAL_WEIGHTING_VALUE 0.5
+#define EXPONENTIAL_WEIGHTING_VALUE 0.001   //prev average weighed at 99.9%
 
 // Function for the thread to sample the POT and update the buffer size.
 static void* potThread(void *vargp);
@@ -114,7 +116,7 @@ int Sampler_getNumSamplesInHistory()
     int taken = Sampler_getNumSamplesTaken();
     int hsize = Sampler_getHistorySize();
     
-    return (taken > hsize) ? taken : hsize;
+    return (taken > hsize) ? hsize : taken;
 
 }
 
@@ -157,35 +159,45 @@ long long Sampler_getNumSamplesTaken(void)
     return totalSamples;
 }
 
+void Sampler_printEveryNth(int n){
+    printf("Sample values: ");
+    for (int i = 0; i <= buffer.maxBufferSize; i+=n){
+        double val = buffer.historyBuffer[i];
+        if (val != DBL_MAX){
+            printf("%.4f\t| ",val);
+        }
+    }
+    printf("\n");
+}
+
 static void* potThread(void *vargp)
 {
     //change 1 to isSampling
     while (1)
     {
-        printf("Raw potentiometer value: %.3i\n", Pot_getRawValue());
+        // printf("Raw potentiometer value: %.3i\n", Pot_getRawValue());
         int sz = Pot_getRawValue();
         Sampler_setHistorySize(sz);  // count potentiometer value
 
     }
-    printf("Sampling of POT has now stopped.\n");
+    // printf("Sampling of POT has now stopped.\n");
     return 0;
 }
 
 static void* lightSamplingThread(void *vargp)
 {
-    
     while(1){
         
         double current_lightRead_voltage = LightRead_getVoltage();
         CircBuff_addData(&buffer, current_lightRead_voltage);
-
+        totalSamples++;
         update_Average_Reading(current_lightRead_voltage);              //keep track of average
             
         //put the reading into the buffer
-        printf("Light value: %.4f\n", current_lightRead_voltage);       // temp for visual output
+        // printf("Light value: %.4f\n", current_lightRead_voltage);       // temp for visual output
         sleep(0.001);                                                   // between light samples, sleep for 1ms 
     }
-    printf("Sampling of photoresistor has now stopped.\n");
+    // printf("Sampling of photoresistor has now stopped.\n");
     return 0;
 
 }
