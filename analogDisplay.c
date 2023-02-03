@@ -22,7 +22,7 @@
 
 #define BUS1_ADDRESS 0x20
 
-#define first_dir "/sys/class/gpio/gpio61/direction"    //set out
+#define first_dir  "/sys/class/gpio/gpio61/direction"    //set out
 #define second_dir "/sys/class/gpio/gpio44/direction"   //set out
 
 #define first_val "/sys/class/gpio/gpio61/value"    //set #
@@ -39,22 +39,70 @@ static pthread_t anDisplayThreadID;
 static int i2cFileDesc;
 // static bool isDisplayActive;
 
+/**
+ * ===========================
+ * Provided code by I2C Guide:
+ * ===========================
+*/
+
+static void editReading(char* fileName, char* val)
+{
+    FILE* pfile = fopen(fileName, "w");
+	if (pfile == NULL) {
+		printf("ERROR: Unable to open file.\n");
+		exit(1);
+	}
+	fprintf(pfile, "%s", val);          //set the file's contents to the value (on/off for seg display)
+	fclose(pfile);
+}
+
+//provided code by I2C guide
+static int initI2cBus(char* bus, int address)
+{
+	i2cFileDesc = open(bus, O_RDWR);
+
+	int result = ioctl(i2cFileDesc, I2C_SLAVE, address);
+	if (result < 0) {
+		perror("Unable to set I2C device to slave address.");
+		exit(-1);
+	}
+	return i2cFileDesc;
+}
+
+static void writeI2cReg(int i2cFileDescr, unsigned char regAddr, unsigned char value)
+{
+	unsigned char buff[2];
+	buff[0] = regAddr;
+	buff[1] = value;
+	int res = write(i2cFileDescr, buff, 2);
+	if (res != 2) {
+		perror("Unable to write i2c register");
+		exit(-1);
+	}
+}
+
+// SETUP:
+
 //complete the steps from the I2C guide (2.3) to config the board to read values 
 static void basicSetup()
 {
-    system("config-pin P9_18 i2c");         //config pins
-	system("config-pin P9_17 i2c");
+    
 
     editReading(GPIO_EXPORT_FILE,"61");     //set to export thru gpio
     editReading(GPIO_EXPORT_FILE,"44");
-
+    printf("Test 0\n");
     editReading(first_dir,"out");           //set direction to output
     editReading(second_dir,"out");
-
+    printf("Test 1\n");
     editReading(first_val,"1");             //set value to on
     editReading(second_val,"1");
+    printf("Test 2\n");
+
+    system("config-pin P9_18 i2c");         //config pins
+	system("config-pin P9_17 i2c");
 }
 
+// Running code: 
 
 void Analog_startDisplaying(void)
 {
@@ -63,7 +111,7 @@ void Analog_startDisplaying(void)
 
 	writeI2cReg(i2cFileDesc, REG_DIRA, 0x00);
 	writeI2cReg(i2cFileDesc, REG_DIRB, 0x00);
-	
+	printf("Test 3\n");
 
     // isDisplayActive = true;
 
@@ -77,47 +125,7 @@ void Analog_stopDisplaying(void)
     pthread_join(anDisplayThreadID, NULL);
 }
 
-
-
-
-static void editReading(char* fileName, char* val)
-{
-    FILE* pfile = fopen(fileName, "w");
-	if (pfile == NULL) {
-		printf("ERROR: Unable to open export file.\n");
-		exit(1);
-	}
-	fprintf(pfile, "%s", val);          //set the file's contents to the value (on/off for seg display)
-	fclose(pfile);
-}
-
-//provided code by I2C guide
-static int initI2cBus(char* bus, int address)
-{
-	int i2cFileDesc = open(bus, O_RDWR);
-
-	int result = ioctl(i2cFileDesc, I2C_SLAVE, address);
-	if (result < 0) {
-		perror("Unable to set I2C device to slave address.");
-		exit(-1);
-	}
-	return i2cFileDesc;
-}
-
-static void writeI2cReg(int i2cFileDesc, unsigned char regAddr, unsigned char value)
-{
-	unsigned char buff[2];
-	buff[0] = regAddr;
-	buff[1] = value;
-	int res = write(i2cFileDesc, buff, 2);
-	if (res != 2) {
-		perror("Unable to write i2c register");
-		exit(-1);
-	}
-}
-
-
-static int firstDigit(int val){
+static int firstDigit_Hex(int val){
     switch (val){
 		case 0:
 			return 0xA1;
@@ -144,7 +152,7 @@ static int firstDigit(int val){
 	}
 }
 
-static int staticDigit(int val){
+static int secondDigit_Hex(int val){
     switch (val){
 		case 0:
 			return 0x86;
@@ -176,9 +184,17 @@ static void* dipHistoryToDisplay(void *vargp)
     while(1){
 
         //display 01-99
+        int num_to_display = Sampler_analyzeDips();
+        int first_digit = num_to_display / 10;  //moves the decimal place one to the left
+        int second_digit = num_to_display % 10; //extracts the first num
 
+        if (first_digit > 9) { first_digit = 9; };
+        if (second_digit> 9) { second_digit= 9; };
 
-        sleep(.01)      //update 10 times per second
+        writeI2cReg(i2cFileDesc, REG_OUTA, firstDigit_Hex(first_digit));
+        writeI2cReg(i2cFileDesc, REG_OUTB, secondDigit_Hex(second_digit));
+
+        sleep(.01);      //update 10 times per second
     }
     return 0;
 }

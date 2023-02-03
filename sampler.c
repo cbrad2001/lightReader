@@ -12,6 +12,7 @@
 #include <float.h>
 
 #define EXPONENTIAL_WEIGHTING_VALUE 0.001   //prev average weighed at 99.9%
+#define LIGHT_DIP_DIFFERENCE_V = 0.1 // volts
 
 // Function for the thread to sample the POT and update the buffer size.
 static void* potThread(void *vargp);
@@ -161,6 +162,12 @@ void Sampler_printEveryNth(int n){
     }
     printf("\n");
 }
+
+int Sampler_analyzeDips(void)
+{
+    return 5;
+}
+
 
 static void* potThread(void *vargp)
 {
