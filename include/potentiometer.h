@@ -3,7 +3,6 @@ potentiometer.h
 Module for functionality of reading the integrated potentiometer (POT) on the zen cape 
 It provides access to raw digital and voltage readings from the POT.
 */
-
 #ifndef _POT_H_
 #define _POT_H_
 

@@ -8,6 +8,4 @@
 void Analog_startDisplaying(void);
 void Analog_stopDisplaying(void);
 
-
-
 #endif

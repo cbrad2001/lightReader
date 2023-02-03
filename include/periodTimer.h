@@ -1,6 +1,4 @@
-#ifndef _PERIOD_TIMER_H_
-#define _PERIOD_TIMER_H_
-
+// periodTimer.h
 // Module to record and report the timing of periodic events.
 //     Written by Brian Fraser
 // Usage:
@@ -14,6 +12,8 @@
 //     data collected for this event (but not others).
 //     For example, call this function once a second to get timing
 //     information to print to the screen.
+#ifndef _PERIOD_TIMER_H_
+#define _PERIOD_TIMER_H_
 
 // Maximum number of timestamps to record for a given event.
 #define MAX_EVENT_TIMESTAMPS (1024*4)

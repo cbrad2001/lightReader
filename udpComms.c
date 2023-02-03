@@ -52,12 +52,6 @@ static void initSocket()
     sock_sz = sizeof(sock);
 }
 
-//receive data over the network, stores to buffer
-// static void recieveData()
-// {   
-    
-// }
-
 void udp_startSampling(void)
 {
     initSocket();
