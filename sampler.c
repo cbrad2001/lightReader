@@ -22,8 +22,6 @@ static void* lightSamplingThread(void *vargp);
 static pthread_t potThreadID, lightThreadID;
 static pthread_mutex_t historyBufferMutex, historySizeMutex;
 static bool isSampling;
-// static double *historyBuffer;
-// static size_t historySize;
 static long long totalSamples;
 static circular_buffer buffer;
 
@@ -113,11 +111,17 @@ double* Sampler_getHistory(int length)
 
 int Sampler_getNumSamplesInHistory()
 {
-    int taken = Sampler_getNumSamplesTaken();
-    int hsize = Sampler_getHistorySize();
+    // int taken = Sampler_getNumSamplesTaken();
+    // int hsize = Sampler_getHistorySize();
     
-    return (taken > hsize) ? hsize : taken;
-
+    // return (taken > hsize) ? hsize : taken;
+    int toReturn;
+    pthread_mutex_lock(&historyBufferMutex);
+    {
+        toReturn = (int)CircBuff_numValidValues(&buffer);
+    }
+    pthread_mutex_unlock(&historyBufferMutex);
+    return toReturn;
 }
 
 // vn = a*sn + (1-a) * v.(n-1)
@@ -140,18 +144,6 @@ static void update_Average_Reading(double newestSample){
 double Sampler_getAverageReading(void)
 {
     return filtered_average;
-
-
-    // double sum,avg = 0;
-    // for (int i = 0; i < Sampler_getHistorySize(); i++){
-    //     sum += buffer.historyBuffer[i];
-    // }
-    // avg = (sum / Sampler_getNumSamplesInHistory());
-
-    // // weights previous average at 99.9% 
-    // // avg = avg * 0.999
-
-    // return avg;
 }
 
 long long Sampler_getNumSamplesTaken(void)
@@ -163,7 +155,7 @@ void Sampler_printEveryNth(int n){
     printf("Sample values: ");
     for (int i = 0; i <= buffer.maxBufferSize; i+=n){
         double val = buffer.historyBuffer[i];
-        if (val != DBL_MAX){
+        if (val != INVALID_VAL){
             printf("%.4f\t| ",val);
         }
     }
@@ -189,7 +181,11 @@ static void* lightSamplingThread(void *vargp)
     while(1){
         
         double current_lightRead_voltage = LightRead_getVoltage();
-        CircBuff_addData(&buffer, current_lightRead_voltage);
+        pthread_mutex_lock(&historyBufferMutex);
+        {
+            CircBuff_addData(&buffer, current_lightRead_voltage);
+        }
+        pthread_mutex_unlock(&historyBufferMutex);
         totalSamples++;
         update_Average_Reading(current_lightRead_voltage);              //keep track of average
             
