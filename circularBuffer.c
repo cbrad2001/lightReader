@@ -14,7 +14,7 @@ typedef enum status
 } status;
 
 static void dbl_memset(double *buffer, size_t size){
-    double max = DBL_MAX;
+    double max = INVALID_VAL;
     for (size_t i = 0; i < size; i++){
         buffer[i] = max;
     }
@@ -25,6 +25,7 @@ void CircBuff_buffInit(circular_buffer *buffer, double size)
     buffer->head = 0;
     buffer->historySize = 0; 
     buffer->maxBufferSize = size;
+    buffer->validItemCount = 0; 
     double* buff = (double*)malloc(size * sizeof(double));   //dynamic array for circular buffer
     // buffer->tail = size-1; 
     buffer->historyBuffer = buff;
@@ -44,6 +45,12 @@ static status buffer_pushback(circular_buffer *b, double pr_reading)
 
     b->historyBuffer[b->head] = pr_reading;     // add data to buffer
     b->head = next;                             // set front of array
+
+    if (!(b->validItemCount + 1 > b->maxBufferSize))
+    {
+        b->validItemCount += 1;
+    }
+
     return SUCCESS;
 }
 
@@ -54,6 +61,7 @@ void CircBuff_buffFree(circular_buffer *buffer)
     // buffer->tail = 0; 
     buffer->historySize = 0; 
     buffer->maxBufferSize = 0;
+    buffer->validItemCount = 0;
     free(buffer->historyBuffer);
     printf("Successfully freed buffer\n");
 }
@@ -75,6 +83,7 @@ void CircBuff_buffResize(circular_buffer *buffer, double size)
         newBuf[i] = oldBuf[i];
     }
     buffer->maxBufferSize = size;
+    buffer->validItemCount = minBufSize;
     buffer->historyBuffer = newBuf;
 
     free(oldBuf);
@@ -88,4 +97,8 @@ void CircBuff_addData(circular_buffer *buffer, double pr_reading)
         printf("Error loading to buffer\n");
         // printf("Final array size: %i\n",Sampler_getNumSamplesInHistory());
     }
+}
+
+size_t CircBuff_numValidValues(circular_buffer *buffer) {
+    return buffer->validItemCount;
 }

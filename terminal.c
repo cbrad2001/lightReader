@@ -41,13 +41,15 @@ static void* print_to_terminal(void *vargp)
         int POT_val = Pot_getRawValue();
         double avg_light = Sampler_getAverageReading();
         int dips = 0;   //stub... implement
-        //line 1: ( # light samples in last second) | (raw pot value) | (num valid samples in history) | (avg light 3dp) | (# dips)
+        int numSamplesInHistory = Sampler_getNumSamplesInHistory();
+        //line 1: ( # light samples in last second) | (raw pot value) | (num valid samples in history) | (avg light 3dp) | (# dips) | (# samples in buffer)
 
         printf("# Samples (1s): %lli \t" 
                "| Raw POT value: %i \t" 
                "| # Valid Samples: %lli \t" 
                "| Average Light Read: %.3f \t" 
-               "| # Dips: %i\n", sampleVal_lastS, POT_val, totalSamples, avg_light, dips);
+               "| # Dips: %i\t"
+               "| Valid Samples in Buffer %u\n", sampleVal_lastS, POT_val, totalSamples, avg_light, dips, numSamplesInHistory);
 
         //line 2: (every 200th sample in history)
         Sampler_printEveryNth(200);
