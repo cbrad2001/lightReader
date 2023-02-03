@@ -75,8 +75,8 @@ void CircBuff_buffResize(circular_buffer *buffer, double size)
 
     size_t minBufSize = (size > oldBufSize) ? oldBufSize : size;
 
-    double *newBuf = (double*)malloc((size+1) * sizeof(double));
-    dbl_memset(newBuf, size+1);
+    double *newBuf = (double*)malloc((size) * sizeof(double));
+    dbl_memset(newBuf, size);
 
     for (size_t i = 0; i < minBufSize; i++)
     {

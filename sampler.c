@@ -181,7 +181,11 @@ static void* lightSamplingThread(void *vargp)
     while(1){
         
         double current_lightRead_voltage = LightRead_getVoltage();
-        CircBuff_addData(&buffer, current_lightRead_voltage);
+        pthread_mutex_lock(&historyBufferMutex);
+        {
+            CircBuff_addData(&buffer, current_lightRead_voltage);
+        }
+        pthread_mutex_unlock(&historyBufferMutex);
         totalSamples++;
         update_Average_Reading(current_lightRead_voltage);              //keep track of average
             
