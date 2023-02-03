@@ -10,9 +10,14 @@
 #include <unistd.h>
 #include <limits.h>
 #include <float.h>
+#include <time.h> // eventually replace by provided code that does not sleep threads
+#include <errno.h>
 
 #define EXPONENTIAL_WEIGHTING_VALUE 0.001   //prev average weighed at 99.9%
 #define LIGHT_DIP_DIFFERENCE_V = 0.1 // volts
+
+// temp test function
+static int msleep(long msec);
 
 // Function for the thread to sample the POT and update the buffer size.
 static void* potThread(void *vargp);
@@ -21,7 +26,8 @@ static void* potThread(void *vargp);
 static void* lightSamplingThread(void *vargp);
 
 static pthread_t potThreadID, lightThreadID;
-static pthread_mutex_t historyBufferMutex, historySizeMutex;
+static pthread_mutex_t historyBufferMutex;
+// static pthread_mutex_t historySizeMutex;
 static bool isSampling;
 static long long totalSamples;
 static circular_buffer buffer;
@@ -31,7 +37,7 @@ static double filtered_average;     //average value based on exponential smoothi
 void Sampler_startSampling(void)
 {
     pthread_mutex_init(&historyBufferMutex, NULL);
-    pthread_mutex_init(&historySizeMutex, NULL);
+    // pthread_mutex_init(&historySizeMutex, NULL);
 
     isSampling = true;
     totalSamples = 0;
@@ -47,7 +53,7 @@ void Sampler_stopSampling(void)
     printf("Stopping the thread for sampling light level.\n");
     isSampling = false;
     pthread_mutex_destroy(&historyBufferMutex);
-    pthread_mutex_destroy(&historySizeMutex);
+    // pthread_mutex_destroy(&historySizeMutex);
 
     pthread_join(lightThreadID, NULL);
     pthread_join(potThreadID, NULL);
@@ -57,14 +63,15 @@ void Sampler_stopSampling(void)
 
 void Sampler_setHistorySize(int newSize)
 {
-    pthread_mutex_lock(&historySizeMutex);
-    {
-        buffer.historySize = newSize;
-    }
-    pthread_mutex_unlock(&historySizeMutex);
+    // pthread_mutex_lock(&historySizeMutex);
+    // {
+    //     buffer.historySize = newSize;
+    // }
+    // pthread_mutex_unlock(&historySizeMutex);
 
     pthread_mutex_lock(&historyBufferMutex);
     {
+        buffer.historySize = newSize;
         CircBuff_buffResize(&buffer, newSize);
     }
     pthread_mutex_unlock(&historyBufferMutex);
@@ -73,11 +80,11 @@ void Sampler_setHistorySize(int newSize)
 int Sampler_getHistorySize(void)
 {
     int toReturn;
-    pthread_mutex_lock(&historySizeMutex);
+    pthread_mutex_lock(&historyBufferMutex);
     {
         toReturn = buffer.historySize;
     }
-    pthread_mutex_unlock(&historySizeMutex);
+    pthread_mutex_unlock(&historyBufferMutex);
     return toReturn;
 }
 
@@ -198,9 +205,33 @@ static void* lightSamplingThread(void *vargp)
             
         //put the reading into the buffer
         // printf("Light value: %.4f\n", current_lightRead_voltage);       // temp for visual output
-        sleep(0.001);                                                   // between light samples, sleep for 1ms 
+        // sleep(0.001);                                                   // between light samples, sleep for 1ms 
+        msleep(1);
     }
     // printf("Sampling of photoresistor has now stopped.\n");
     return 0;
 
+}
+
+// for testing, replace with provided timing code later
+// taken from https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
+static int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
 }
