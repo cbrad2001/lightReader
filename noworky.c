@@ -5,6 +5,7 @@
 #include "include/potentiometer.h"
 #include "include/photoresistor.h"
 #include "include/sampler.h"
+#include "include/terminal.h"
 
 /*
  * noworky.c
@@ -54,11 +55,14 @@ void displayArrays(double *source, double *target, int size)
  */
 int main()
 {
-	PhotoRes_startSampling();
 	Sampler_startSampling();
+	Terminal_startPrinting();
 	
+
+
+	Terminal_stopPrinting();
 	Sampler_stopSampling();
-	PhotoRes_stopSampling();
+	
 
 	// unsigned int i;
 	// double *source, *target;

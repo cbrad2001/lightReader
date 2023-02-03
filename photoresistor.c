@@ -8,11 +8,6 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-static pthread_t lightThreadID;
-static bool isSampling;
-
-static void* lightSamplingThread(void *vargp);
-
 int LightRead_getRawValue(void)
 {
     FILE *lightReadVoltageFile = fopen(LIGHTREAD_VOLTAGE_PATH, "r");
@@ -20,13 +15,14 @@ int LightRead_getRawValue(void)
 
     if (!lightReadVoltageFile)
     {
-        fprintf(stderr, "Error reading the voltage for the POT.\n");
+        fprintf(stderr, "Error reading the voltage for the photoresistor.\n");
         fileStatus = false;
     }
 
     const int MAX_LENGTH = 1024;
     char buf[MAX_LENGTH];
     fgets(buf, MAX_LENGTH, lightReadVoltageFile);
+    fclose(lightReadVoltageFile);
     int voltageVal = atoi(buf); // Potential TODO: error check atoi
 
     if (fileStatus == false)
@@ -43,6 +39,8 @@ double LightRead_getVoltage(void)
     
     if (rawValue == -1)
     {
+        fprintf(stderr, "Error reading the voltage for the photoresistor.\n");
+        exit(1);
         return -1;
     }
 
@@ -52,30 +50,4 @@ double LightRead_getVoltage(void)
 
     return voltage;
 }
-
-void PhotoRes_startSampling(void){
-    isSampling = true;
-    pthread_create(&lightThreadID, NULL, &lightSamplingThread, NULL);
-}
-
-void PhotoRes_stopSampling(void){
-    pthread_join(lightThreadID, NULL);
-}
-
-static void* lightSamplingThread(void *vargp)
-{
-    while(isSampling){
-
-        double current_lightRead_voltage = LightRead_getVoltage();
-        //put the reading into the buffer
-        printf("Light value: %.4f\n", current_lightRead_voltage);         // temp for visual output
-        sleep(0.001);                                                   // between light samples, sleep for 1ms 
-        // totalSamples++;
-
-    }
-    printf("Sampling has now stopped.\n");
-    return 0;
-
-}
-
 

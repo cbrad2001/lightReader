@@ -19,6 +19,7 @@ int Pot_getRawValue(void)
     const int MAX_LENGTH = 1024;
     char buf[MAX_LENGTH];
     fgets(buf, MAX_LENGTH, potVoltageFile);
+    fclose(potVoltageFile);
     int voltageVal = atoi(buf); // Potential TODO: error check atoi
 
     if (fileStatus == false)
@@ -35,6 +36,8 @@ double Pot_getVoltage(void)
 
     if (rawValue == -1)
     {
+        fprintf(stderr, "Error reading the voltage for the POT.\n");
+        exit(1);
         return -1;
     }
 
