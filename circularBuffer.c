@@ -82,9 +82,14 @@ void CircBuff_buffResize(circular_buffer *buffer, double size)
     {
         newBuf[i] = oldBuf[i];
     }
+
     buffer->maxBufferSize = size;
     buffer->validItemCount = minBufSize;
     buffer->historyBuffer = newBuf;
+
+    if (buffer->head >= size){
+        buffer->head = 0; //restart
+    }
 
     free(oldBuf);
     oldBuf = NULL;
@@ -92,13 +97,13 @@ void CircBuff_buffResize(circular_buffer *buffer, double size)
 
 void CircBuff_addData(circular_buffer *buffer, double pr_reading)
 {
-    if (buffer_pushback(buffer,pr_reading)==FAIL)
-    {
+    if (buffer_pushback(buffer,pr_reading)==FAIL){
         printf("Error loading to buffer\n");
         // printf("Final array size: %i\n",Sampler_getNumSamplesInHistory());
     }
 }
 
-size_t CircBuff_numValidValues(circular_buffer *buffer) {
+size_t CircBuff_numValidValues(circular_buffer *buffer) 
+{
     return buffer->validItemCount;
 }

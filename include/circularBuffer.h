@@ -1,11 +1,10 @@
 // circularBuffer.h
 // Provides definition for a circular buffer in this case of holding double values.
+#ifndef _CIRC_BUF_H_
+#define _CIRC_BUF_H_
 
 #include <stdlib.h>
 #include <float.h>
-
-#ifndef _CIRC_BUF_H_
-#define _CIRC_BUF_H_
 
 #define INVALID_VAL DBL_MAX
 

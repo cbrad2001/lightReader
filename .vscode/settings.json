@@ -7,6 +7,8 @@
         "pthread.h": "c",
         "circularbuffer.h": "c",
         "potentiometer.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "analogdisplay.h": "c",
+        "string.h": "c"
     }
 }

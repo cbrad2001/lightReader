@@ -35,4 +35,7 @@ long long Sampler_getNumSamplesTaken(void);
 //get every Nth sample
 void Sampler_printEveryNth(int n);
 
+// assess the buffer history to count any substantial differences in light reading
+int Sampler_analyzeDips(void);
+
 #endif

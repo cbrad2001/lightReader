@@ -15,7 +15,6 @@ static long long prevSampleSum;
 
 static void* print_to_terminal(void *vargp);
 
-
 void Terminal_startPrinting(void)
 {
     // isPrinting = true;
@@ -29,8 +28,7 @@ void Terminal_stopPrinting(void)
     pthread_join(termThreadID, NULL);
 }
 
-
-
+//thread repeatedly outputs specified data to screen at a 1 second rate
 static void* print_to_terminal(void *vargp)
 {
     //every second....

@@ -14,6 +14,7 @@
 #include <errno.h>
 
 #define EXPONENTIAL_WEIGHTING_VALUE 0.001   //prev average weighed at 99.9%
+#define LIGHT_DIP_DIFFERENCE_V = 0.1 // volts
 
 // temp test function
 static int msleep(long msec);
@@ -118,10 +119,6 @@ double* Sampler_getHistory(int length)
 
 int Sampler_getNumSamplesInHistory()
 {
-    // int taken = Sampler_getNumSamplesTaken();
-    // int hsize = Sampler_getHistorySize();
-    
-    // return (taken > hsize) ? hsize : taken;
     int toReturn;
     pthread_mutex_lock(&historyBufferMutex);
     {
@@ -131,15 +128,17 @@ int Sampler_getNumSamplesInHistory()
     return toReturn;
 }
 
-// vn = a*sn + (1-a) * v.(n-1)
-static double exponential_smoothing(double sample_n, double prev_filter_value){
+// vn = a*sn + (1-a) * v.(n-1) - this function performs the smoothing calculation
+static double exponential_smoothing(double sample_n, double prev_filter_value)
+{
     double current_weighted = EXPONENTIAL_WEIGHTING_VALUE * sample_n;
     double history_weighted = (1-EXPONENTIAL_WEIGHTING_VALUE)*prev_filter_value;
     double new_avg = current_weighted + history_weighted;
     return new_avg;
 }
 
-static void update_Average_Reading(double newestSample){
+static void update_Average_Reading(double newestSample)
+{
     //first case v.0 = s.0
     if(!filtered_average){ 
         filtered_average = newestSample;    //first case (average is the only value)
@@ -168,6 +167,12 @@ void Sampler_printEveryNth(int n){
     }
     printf("\n");
 }
+
+int Sampler_analyzeDips(void)
+{
+    return 5;
+}
+
 
 static void* potThread(void *vargp)
 {
