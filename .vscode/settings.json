@@ -9,6 +9,7 @@
         "potentiometer.h": "c",
         "stdio.h": "c",
         "analogdisplay.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "udpcomms.h": "c"
     }
 }

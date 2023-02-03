@@ -1,14 +1,3 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdio.h>
-
-#include "include/potentiometer.h"
-#include "include/photoresistor.h"
-#include "include/sampler.h"
-#include "include/terminal.h"
-#include "include/analogDisplay.h"
-#include "include/udpComms.h"
-
 /*
  * noworky.c
  *
@@ -57,51 +46,40 @@ void displayArrays(double *source, double *target, int size)
  */
 int main()
 {
-	Sampler_startSampling();
-	Terminal_startPrinting();
-	// Analog_startDisplaying();
-	// udp_startSampling();
-	
-	// udp_stopSampling();
-	// Analog_stopDisplaying();
-	Terminal_stopPrinting();
-	Sampler_stopSampling();
-	
+	unsigned int i;
+	double *source, *target;
+	printf("noworky: by Brian Fraser\n");
 
-	// unsigned int i;
-	// double *source, *target;
-	// printf("noworky: by Brian Fraser\n");
+	// Allocate the arrays:
+	source = malloc(sizeof(*source) * NUM_ELEMENTS);
+	target = malloc(sizeof(*target) * NUM_ELEMENTS);
 
-	// // Allocate the arrays:
-	// source = malloc(sizeof(*source) * NUM_ELEMENTS);
-	// target = malloc(sizeof(*target) * NUM_ELEMENTS);
+	if (!source || !target) {
+		printf("ERROR: Allocation failed.\n");
+	}
 
-	// if (!source || !target) {
-	// 	printf("ERROR: Allocation failed.\n");
-	// }
+	// Initialize the arrays
+	for (i=0; i < NUM_ELEMENTS; i++) {
+		source[i] = i * 2.0;
+		target[i] = i * 10.0;
+	}
 
-	// // Initialize the arrays
-	// for (i=0; i < NUM_ELEMENTS; i++) {
-	// 	source[i] = i * 2.0;
-	// 	target[i] = i * 10.0;
-	// }
+	// Display them
+	printf("Initial values: \n");
+	displayArrays(source, target, NUM_ELEMENTS);
 
-	// // Display them
-	// printf("Initial values: \n");
-	// displayArrays(source, target, NUM_ELEMENTS);
+	// Swap their contents
+	tradeArrays(source, target, NUM_ELEMENTS);
 
-	// // Swap their contents
-	// tradeArrays(source, target, NUM_ELEMENTS);
+	// Display them
+	printf("Final values: \n");
+	displayArrays(source, target, NUM_ELEMENTS);
 
-	// // Display them
-	// printf("Final values: \n");
-	// displayArrays(source, target, NUM_ELEMENTS);
+	// Clean up.
+	free(source);
+	free(target);
 
-	// // Clean up.
-	// free(source);
-	// free(target);
-
-	// printf("Done.\n");
+	printf("Done.\n");
 
 	return 0;
 }

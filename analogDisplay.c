@@ -184,7 +184,7 @@ static void* dipHistoryToDisplay(void *vargp)
     while(1){
 
         //display 01-99
-        int num_to_display = Sampler_analyzeDips();
+        int num_to_display = Sampler_analyzeDips(1.005);
         int first_digit = num_to_display / 10;  //moves the decimal place one to the left
         int second_digit = num_to_display % 10; //extracts the first num
 

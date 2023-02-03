@@ -35,22 +35,20 @@ void CircBuff_buffInit(circular_buffer *buffer, double size)
 
 static status buffer_pushback(circular_buffer *b, double pr_reading)
 {
-    int next = b->head + 1;      // pointer after write
+    int next = b->head + 1;                     // pointer after write
 
-    if (next >= b->maxBufferSize)  // restart at first index once completely circled 
+    if (next >= b->maxBufferSize)               // restart at first index once completely circled 
         next = 0;
 
-    // if (next == b->tail)            // 
+    // if (next == b->tail)                     // 
     //     return FAIL;
 
     b->historyBuffer[b->head] = pr_reading;     // add data to buffer
     b->head = next;                             // set front of array
 
     if (!(b->validItemCount + 1 > b->maxBufferSize))
-    {
         b->validItemCount += 1;
-    }
-
+    
     return SUCCESS;
 }
 
@@ -69,17 +67,15 @@ void CircBuff_buffFree(circular_buffer *buffer)
 void CircBuff_buffResize(circular_buffer *buffer, double size)
 {
     size_t oldBufSize = buffer->maxBufferSize;
-    if (oldBufSize == size) { return; } // don't resize
+    if (oldBufSize == size) { return; }         // don't resize
     
     double *oldBuf = buffer->historyBuffer; 
-
     size_t minBufSize = (size > oldBufSize) ? oldBufSize : size;
 
     double *newBuf = (double*)malloc((size) * sizeof(double));
     dbl_memset(newBuf, size);
 
-    for (size_t i = 0; i < minBufSize; i++)
-    {
+    for (size_t i = 0; i < minBufSize; i++){
         newBuf[i] = oldBuf[i];
     }
 
@@ -88,7 +84,7 @@ void CircBuff_buffResize(circular_buffer *buffer, double size)
     buffer->historyBuffer = newBuf;
 
     if (buffer->head >= size){
-        buffer->head = 0; //restart
+        buffer->head = 0;                       //restart
     }
 
     free(oldBuf);

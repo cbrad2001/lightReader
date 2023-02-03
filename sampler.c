@@ -14,7 +14,7 @@
 #include <errno.h>
 
 #define EXPONENTIAL_WEIGHTING_VALUE 0.001   //prev average weighed at 99.9%
-#define LIGHT_DIP_DIFFERENCE_V = 0.1 // volts
+#define LIGHT_DIP_DIFFERENCE_V 0.1 // volts
 
 // temp test function
 static int msleep(long msec);
@@ -94,24 +94,24 @@ double* Sampler_getHistory(int length)
     // Approach: define a getter function in the circularBuffer module
     // that returns the double array from the order of head to tail
     // The 373 in me is saying that Sampler module shouldn't know how to work with circular_buffer
-    // int checkedLength;
+    int checkedLength;
 
-    // if (length > Sampler_getHistorySize())
-    // {
-    //     checkedLength = Sampler_getHistorySize();
-    // }
-    // else
-    // {
-    //     checkedLength = length;
-    // }
+    if (length > Sampler_getHistorySize())
+    {
+        checkedLength = Sampler_getHistorySize();
+    }
+    else
+    {
+        checkedLength = length;
+    }
 
-    // // A smart pointer would be nice...
-    // double *historyCopy = malloc(checkedLength * sizeof(double));
-    // for (int i = 0; i < checkedLength; i++)
-    // {
-    //     historyCopy[i] = buffer.historyBuffer[i];
-    // }
-    // return historyCopy;
+    // A smart pointer would be nice...
+    double *historyCopy = malloc(checkedLength * sizeof(double));
+    for (int i = 0; i < checkedLength; i++)
+    {
+        historyCopy[i] = buffer.historyBuffer[i];
+    }
+    return historyCopy;
 
     // STUB
     return NULL;
@@ -127,6 +127,17 @@ int Sampler_getNumSamplesInHistory()
     pthread_mutex_unlock(&historyBufferMutex);
     return toReturn;
 }
+
+int Sampler_analyzeDips(double current_lightRead_voltage)
+{
+    double currAvg = Sampler_getAverageReading();
+
+    if (current_lightRead_voltage <= (currAvg - LIGHT_DIP_DIFFERENCE_V))
+        return 1;   // is a dip
+
+    return 0;       // not a dip
+}
+
 
 // vn = a*sn + (1-a) * v.(n-1) - this function performs the smoothing calculation
 static double exponential_smoothing(double sample_n, double prev_filter_value)
@@ -166,11 +177,6 @@ void Sampler_printEveryNth(int n){
         }
     }
     printf("\n");
-}
-
-int Sampler_analyzeDips(void)
-{
-    return 5;
 }
 
 
