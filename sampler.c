@@ -71,7 +71,6 @@ void Sampler_setHistorySize(int newSize)
 
     pthread_mutex_lock(&historyBufferMutex);
     {
-        buffer.historySize = newSize;
         CircBuff_buffResize(&buffer, newSize);
     }
     pthread_mutex_unlock(&historyBufferMutex);
@@ -82,7 +81,7 @@ int Sampler_getHistorySize(void)
     int toReturn;
     pthread_mutex_lock(&historyBufferMutex);
     {
-        toReturn = buffer.historySize;
+        toReturn = buffer.maxBufferSize;
     }
     pthread_mutex_unlock(&historyBufferMutex);
     return toReturn;
@@ -170,7 +169,7 @@ long long Sampler_getNumSamplesTaken(void)
 
 void Sampler_printEveryNth(int n){
     printf("Sample values: ");
-    for (int i = 0; i <= buffer.maxBufferSize; i+=n){
+    for (int i = 0; i < buffer.maxBufferSize; i+=n){
         double val = buffer.historyBuffer[i];
         if (val != INVALID_VAL){
             printf("%.4f\t| ",val);
@@ -182,21 +181,20 @@ void Sampler_printEveryNth(int n){
 
 static void* potThread(void *vargp)
 {
-    //change 1 to isSampling
-    while (1)
+    while (isSampling)
     {
         // printf("Raw potentiometer value: %.3i\n", Pot_getRawValue());
         int sz = Pot_getRawValue();
         Sampler_setHistorySize(sz);  // count potentiometer value
-
+        sleep(1);
     }
-    // printf("Sampling of POT has now stopped.\n");
+    printf("Sampling of POT has now stopped.\n");
     return 0;
 }
 
 static void* lightSamplingThread(void *vargp)
 {
-    while(1){
+    while(isSampling){
         
         double current_lightRead_voltage = LightRead_getVoltage();
         pthread_mutex_lock(&historyBufferMutex);
@@ -206,15 +204,11 @@ static void* lightSamplingThread(void *vargp)
         pthread_mutex_unlock(&historyBufferMutex);
         totalSamples++;
         update_Average_Reading(current_lightRead_voltage);              //keep track of average
-            
-        //put the reading into the buffer
-        // printf("Light value: %.4f\n", current_lightRead_voltage);       // temp for visual output
-        // sleep(0.001);                                                   // between light samples, sleep for 1ms 
+
         msleep(1);
     }
-    // printf("Sampling of photoresistor has now stopped.\n");
+    printf("Sampling of photoresistor has now stopped.\n");
     return 0;
-
 }
 
 // for testing, replace with provided timing code later
