@@ -18,9 +18,9 @@ int main()
     Sampler_startSampling();
 	Terminal_startPrinting();
 	// Analog_startDisplaying();
-	// udp_startSampling();
+	udp_startSampling();
 	
-	// udp_stopSampling();
+	udp_stopSampling();
 	// Analog_stopDisplaying();
 	Terminal_stopPrinting();
 	Sampler_stopSampling();

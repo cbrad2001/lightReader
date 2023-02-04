@@ -38,7 +38,7 @@ static void* print_to_terminal(void *vargp)
         prevSampleSum += sampleVal_lastS;
         int POT_val = Pot_getRawValue();
         double avg_light = Sampler_getAverageReading();
-        int dips = 0;   //stub... implement
+        int dips = Sampler_analyzeDips();   //stub... implement
         int numSamplesInHistory = Sampler_getNumSamplesInHistory();
         //line 1: ( # light samples in last second) | (raw pot value) | (num valid samples in history) | (avg light 3dp) | (# dips) | (# samples in buffer)
 

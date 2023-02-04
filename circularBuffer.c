@@ -69,88 +69,89 @@ void CircBuff_buffFree(circular_buffer *buffer)
 
 void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 {
-    size_t oldBufSize = buffer->maxBufferSize;
-    if (oldBufSize == size) { return; }         // don't resize
+    // size_t oldBufSize = buffer->maxBufferSize;
+    // if (oldBufSize == size) { return; }         // don't resize
     
-    double *oldBuf = buffer->historyBuffer; 
-    size_t minBufSize = (size > oldBufSize) ? oldBufSize : size;
+    // double *oldBuf = buffer->historyBuffer; 
+    // size_t minBufSize = (size > oldBufSize) ? oldBufSize : size;
 
-    double *newBuf = (double*)malloc((size) * sizeof(double));
-    dbl_memset(newBuf, size);
-
-    for (size_t i = 0; i < minBufSize; i++){
-        newBuf[i] = oldBuf[i];
-    }
-
-    buffer->maxBufferSize = size;
-    buffer->validItemCount = minBufSize;
-    buffer->historyBuffer = newBuf;
-
-    if (buffer->head >= size){
-        buffer->head = 0;                       //restart
-    }
-
-    free(oldBuf);
-    oldBuf = NULL;
-
-    // // use of int to avoid underflow from counting backwards
-    // int oldBufSize = buffer->maxBufferSize;
-    // if (oldBufSize == size) { return; }
-
-    // double *oldBuf = buffer->historyBuffer;
-
-    // if (size == 0)
-    // {
-    //     buffer->head = 0;
-    //     buffer->maxBufferSize = 0;
-    //     buffer->validItemCount = 0;
-    //     free(oldBuf);
-    //     return;
-    // }
-
-    // double *newBuf = (double*)malloc(size * sizeof(double));
+    // double *newBuf = (double*)malloc((size) * sizeof(double));
     // dbl_memset(newBuf, size);
 
-    // int destPos = (size > oldBufSize) ? (oldBufSize - 1) : (size - 1);
-    // int sourcePos = buffer->head;
-    // if (size > oldBufSize)
-    // {
-    //     for (size_t i = 0; i < oldBufSize; i++)
-    //     {
-    //         newBuf[i] = oldBuf[i];
-    //     }
-    // }
-    // else // take the most recent M samples on buffer size decrease
-    // {
-    //     while (destPos >= 0)
-    //     {
-    //         newBuf[destPos] = oldBuf[sourcePos];
-    //         if (sourcePos == 0)
-    //         {
-    //             sourcePos = oldBufSize - 1; // loop back to end of array and continue copying
-    //         }
-    //         else
-    //         {
-    //             sourcePos -= 1;
-    //         }
-    //         destPos -= 1;
-    //     }
+    // for (size_t i = 0; i < minBufSize; i++){
+    //     newBuf[i] = oldBuf[i];
     // }
 
-    // if (size > oldBufSize)
-    // {
-    //     buffer->head = oldBufSize - 1;
-    //     buffer->validItemCount = oldBufSize;
-    // }
-    // else
-    // {
-    //     buffer->head = 0; // buffer is full so just start from the front
-    //     buffer->validItemCount = size;
-    // }
     // buffer->maxBufferSize = size;
+    // buffer->validItemCount = minBufSize;
     // buffer->historyBuffer = newBuf;
+
+    // if (buffer->head >= size){
+    //     buffer->head = 0;                       //restart
+    // }
+
     // free(oldBuf);
     // oldBuf = NULL;
+
+    // use of int to avoid underflow from counting backwards
+    int oldBufSize = buffer->maxBufferSize;
+    if (oldBufSize == size) { return; }
+
+    double *oldBuf = buffer->historyBuffer;
+
+    if (size == 0)
+    {
+        buffer->head = 0;
+        buffer->maxBufferSize = 0;
+        buffer->validItemCount = 0;
+        free(oldBuf);
+        oldBuf = NULL;
+        return;
+    }
+
+    double *newBuf = (double*)malloc(size * sizeof(double));
+    dbl_memset(newBuf, size);
+
+    int destPos = (size > oldBufSize) ? (oldBufSize - 1) : (size - 1);
+    int sourcePos = buffer->head;
+    if (size > oldBufSize)
+    {
+        for (size_t i = 0; i < oldBufSize; i++)
+        {
+            newBuf[i] = oldBuf[i];
+        }
+    }
+    else // take the most recent M samples on buffer size decrease
+    {
+        while (destPos >= 0)
+        {
+            newBuf[destPos] = oldBuf[sourcePos];
+            if (sourcePos == 0)
+            {
+                sourcePos = oldBufSize - 1; // loop back to end of array and continue copying
+            }
+            else
+            {
+                sourcePos -= 1;
+            }
+            destPos -= 1;
+        }
+    }
+
+    if (size > oldBufSize)
+    {
+        buffer->head = oldBufSize - 1;
+        buffer->validItemCount = oldBufSize;
+    }
+    else
+    {
+        buffer->head = 0; // buffer is full so just start from the front
+        buffer->validItemCount = size;
+    }
+    buffer->maxBufferSize = size;
+    buffer->historyBuffer = newBuf;
+    free(oldBuf);
+    oldBuf = NULL;
 }
 
 void CircBuff_addData(circular_buffer *buffer, double pr_reading)

@@ -127,16 +127,6 @@ int Sampler_getNumSamplesInHistory()
     return toReturn;
 }
 
-int Sampler_analyzeDips(double current_lightRead_voltage)
-{
-    double currAvg = Sampler_getAverageReading();
-
-    if (current_lightRead_voltage <= (currAvg - LIGHT_DIP_DIFFERENCE_V))
-        return 1;   // is a dip
-
-    return 0;       // not a dip
-}
-
 
 // vn = a*sn + (1-a) * v.(n-1) - this function performs the smoothing calculation
 static double exponential_smoothing(double sample_n, double prev_filter_value)
@@ -160,6 +150,20 @@ static void update_Average_Reading(double newestSample)
 double Sampler_getAverageReading(void)
 {
     return filtered_average;
+}
+
+int Sampler_analyzeDips()
+{
+    int dipCount = 0;
+    double* validHistory = Sampler_getHistory(Sampler_getNumSamplesInHistory());
+    double currAvg = Sampler_getAverageReading();
+
+    for (int i = 0; i < Sampler_getNumSamplesInHistory()-1; i++){
+        if (validHistory[i] <= (currAvg - LIGHT_DIP_DIFFERENCE_V)){
+            dipCount++;
+        }
+    }
+    return dipCount;       
 }
 
 long long Sampler_getNumSamplesTaken(void)

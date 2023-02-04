@@ -86,8 +86,6 @@ static void writeI2cReg(int i2cFileDescr, unsigned char regAddr, unsigned char v
 //complete the steps from the I2C guide (2.3) to config the board to read values 
 static void basicSetup()
 {
-    
-
     editReading(GPIO_EXPORT_FILE,"61");     //set to export thru gpio
     editReading(GPIO_EXPORT_FILE,"44");
     printf("Test 0\n");
@@ -184,7 +182,7 @@ static void* dipHistoryToDisplay(void *vargp)
     while(1){
 
         //display 01-99
-        int num_to_display = Sampler_analyzeDips(1.005);
+        int num_to_display = Sampler_analyzeDips();
         int first_digit = num_to_display / 10;  //moves the decimal place one to the left
         int second_digit = num_to_display % 10; //extracts the first num
 

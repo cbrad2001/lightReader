@@ -14,7 +14,7 @@ void Sampler_setHistorySize(int newSize);
 int Sampler_getHistorySize(void);
 
 // assess the buffer history to count any substantial differences in light reading
-int Sampler_analyzeDips(double current_lightRead_voltage);
+int Sampler_analyzeDips(void);
 
 // Get a copy of the samples in the sample history.
 // Returns a newly allocated array and sets `length` to be the
