@@ -34,4 +34,7 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size);
 // Gets the number of valid values in the buffer.
 size_t CircBuff_numValidValues(circular_buffer *buffer);
 
+// Returns a copy of the buffer as a regular array.
+double* CircBuff_getDoubleCopy(circular_buffer *buffer, int length);
+
 #endif

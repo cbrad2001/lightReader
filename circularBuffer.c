@@ -69,30 +69,6 @@ void CircBuff_buffFree(circular_buffer *buffer)
 
 void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 {
-    // size_t oldBufSize = buffer->maxBufferSize;
-    // if (oldBufSize == size) { return; }         // don't resize
-    
-    // double *oldBuf = buffer->historyBuffer; 
-    // size_t minBufSize = (size > oldBufSize) ? oldBufSize : size;
-
-    // double *newBuf = (double*)malloc((size) * sizeof(double));
-    // dbl_memset(newBuf, size);
-
-    // for (size_t i = 0; i < minBufSize; i++){
-    //     newBuf[i] = oldBuf[i];
-    // }
-
-    // buffer->maxBufferSize = size;
-    // buffer->validItemCount = minBufSize;
-    // buffer->historyBuffer = newBuf;
-
-    // if (buffer->head >= size){
-    //     buffer->head = 0;                       //restart
-    // }
-
-    // free(oldBuf);
-    // oldBuf = NULL;
-
     // use of int to avoid underflow from counting backwards
     int oldBufSize = buffer->maxBufferSize;
     if (oldBufSize == size) { return; }
@@ -173,4 +149,25 @@ void CircBuff_addData(circular_buffer *buffer, double pr_reading)
 size_t CircBuff_numValidValues(circular_buffer *buffer) 
 {
     return buffer->validItemCount;
+}
+
+// Returns a copy of the buffer as a regular array.
+double* CircBuff_getDoubleCopy(circular_buffer *buffer, int length)
+{
+    if (length == 0)
+    {
+        return NULL;
+    }
+
+    if (length > buffer->validItemCount)
+    {
+        length = buffer->validItemCount;
+    }
+
+    double* toReturn = (double*)malloc(length*sizeof(double));
+    for (size_t i = 0; i < length; i++)
+    {
+        toReturn[i] = buffer->historyBuffer[i];
+    }
+    return toReturn;
 }

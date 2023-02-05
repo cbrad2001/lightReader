@@ -89,31 +89,13 @@ int Sampler_getHistorySize(void)
 
 double* Sampler_getHistory(int length)
 {
-    // TODO: change the implementation to be in terms of the circular buffer
-    // Approach: define a getter function in the circularBuffer module
-    // that returns the double array from the order of head to tail
-    // The 373 in me is saying that Sampler module shouldn't know how to work with circular_buffer
-    int checkedLength;
-
-    if (length > Sampler_getHistorySize())
+    double* bufCopy;
+    pthread_mutex_lock(&historyBufferMutex);
     {
-        checkedLength = Sampler_getHistorySize();
+        bufCopy = CircBuff_getDoubleCopy(&buffer, length);
     }
-    else
-    {
-        checkedLength = length;
-    }
-
-    // A smart pointer would be nice...
-    double *historyCopy = malloc(checkedLength * sizeof(double));
-    for (int i = 0; i < checkedLength; i++)
-    {
-        historyCopy[i] = buffer.historyBuffer[i];
-    }
-    return historyCopy;
-
-    // STUB
-    return NULL;
+    pthread_mutex_unlock(&historyBufferMutex);
+    return bufCopy;
 }
 
 int Sampler_getNumSamplesInHistory()
@@ -155,14 +137,26 @@ double Sampler_getAverageReading(void)
 int Sampler_analyzeDips()
 {
     int dipCount = 0;
-    double* validHistory = Sampler_getHistory(Sampler_getNumSamplesInHistory());
+    bool dipAvailable = true;
+    int bufSize = Sampler_getNumSamplesInHistory();
+    double* validHistory = Sampler_getHistory(bufSize);
     double currAvg = Sampler_getAverageReading();
 
-    for (int i = 0; i < Sampler_getNumSamplesInHistory()-1; i++){
-        if (validHistory[i] <= (currAvg - LIGHT_DIP_DIFFERENCE_V)){
-            dipCount++;
+    for (int i = 0; i < bufSize - 1; i++){
+        bool isDip = validHistory[i] <= (currAvg - LIGHT_DIP_DIFFERENCE_V);
+        if (isDip && dipAvailable)
+        {
+            dipCount += 1;
+            dipAvailable = false;
         }
+        else if (!isDip)
+        {
+            dipAvailable = true;
+        }
+        // if isDip && !dipAvailable do nothing
     }
+
+    free(validHistory);
     return dipCount;       
 }
 
