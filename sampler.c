@@ -149,7 +149,8 @@ int Sampler_analyzeDips()
             break; // unlikely this will ever trigger
         }
 
-        bool isDip = validHistory[i] <= (currAvg - LIGHT_DIP_DIFFERENCE_V);
+        bool isDip = (validHistory[i] - 0.03 <= (currAvg - LIGHT_DIP_DIFFERENCE_V)) && 
+            (validHistory[i] + 0.03 <= (currAvg - LIGHT_DIP_DIFFERENCE_V)); // check for hysterisis bounds
         if (isDip && dipAvailable)
         {
             dipCount += 1;
