@@ -104,6 +104,7 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
         buffer->head = 0;
         buffer->maxBufferSize = 0;
         buffer->validItemCount = 0;
+        buffer->historyBuffer = NULL;
         free(oldBuf);
         oldBuf = NULL;
         return;
@@ -140,7 +141,14 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 
     if (size > oldBufSize)
     {
-        buffer->head = oldBufSize - 1;
+        if (oldBufSize > 0)
+        {
+            buffer->head = oldBufSize - 1;
+        }
+        else // if oldBufSize == 0
+        {
+            buffer->head = 0;
+        }
         buffer->validItemCount = oldBufSize;
     }
     else
