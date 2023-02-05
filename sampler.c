@@ -27,7 +27,6 @@ static void* lightSamplingThread(void *vargp);
 
 static pthread_t potThreadID, lightThreadID;
 static pthread_mutex_t historyBufferMutex;
-// static pthread_mutex_t historySizeMutex;
 static bool isSampling;
 static long long totalSamples;
 static circular_buffer buffer;
@@ -37,12 +36,15 @@ static double filtered_average;     //average value based on exponential smoothi
 void Sampler_startSampling(void)
 {
     pthread_mutex_init(&historyBufferMutex, NULL);
-    // pthread_mutex_init(&historySizeMutex, NULL);
 
     isSampling = true;
     totalSamples = 0;
 
-    CircBuff_buffInit(&buffer, Pot_getRawValue());
+    pthread_mutex_lock(&historyBufferMutex);
+    {
+        CircBuff_buffInit(&buffer, Pot_getRawValue());
+    }
+    pthread_mutex_unlock(&historyBufferMutex);
 
     pthread_create(&potThreadID, NULL, &potThread, NULL);
     pthread_create(&lightThreadID, NULL, &lightSamplingThread, NULL);    
@@ -52,23 +54,21 @@ void Sampler_stopSampling(void)
 {
     printf("Stopping the thread for sampling light level.\n");
     isSampling = false;
-    pthread_mutex_destroy(&historyBufferMutex);
-    // pthread_mutex_destroy(&historySizeMutex);
 
     pthread_join(lightThreadID, NULL);
     pthread_join(potThreadID, NULL);
 
-    CircBuff_buffFree(&buffer);  
+    pthread_mutex_lock(&historyBufferMutex);
+    {
+        CircBuff_buffFree(&buffer);
+    }
+    pthread_mutex_unlock(&historyBufferMutex);
+
+    pthread_mutex_destroy(&historyBufferMutex); 
 }
 
 void Sampler_setHistorySize(int newSize)
 {
-    // pthread_mutex_lock(&historySizeMutex);
-    // {
-    //     buffer.historySize = newSize;
-    // }
-    // pthread_mutex_unlock(&historySizeMutex);
-
     pthread_mutex_lock(&historyBufferMutex);
     {
         CircBuff_buffResize(&buffer, newSize);
@@ -121,9 +121,9 @@ static double exponential_smoothing(double sample_n, double prev_filter_value)
 
 static void update_Average_Reading(double newestSample)
 {
-    //first case v.0 = s.0
+    // first case v.0 = s.0
     if(!filtered_average){ 
-        filtered_average = newestSample;    //first case (average is the only value)
+        filtered_average = newestSample;    // first case (average is the only value)
     }
 
     filtered_average = exponential_smoothing(newestSample,filtered_average);
@@ -142,7 +142,13 @@ int Sampler_analyzeDips()
     double* validHistory = Sampler_getHistory(bufSize);
     double currAvg = Sampler_getAverageReading();
 
-    for (int i = 0; i < bufSize - 1; i++){
+    for (int i = 0; i < bufSize - 1; i++)
+    {
+        if (validHistory[i] == INVALID_VAL)
+        {
+            break; // unlikely this will ever trigger
+        }
+
         bool isDip = validHistory[i] <= (currAvg - LIGHT_DIP_DIFFERENCE_V);
         if (isDip && dipAvailable)
         {
@@ -181,7 +187,6 @@ static void* potThread(void *vargp)
 {
     while (isSampling)
     {
-        // printf("Raw potentiometer value: %.3i\n", Pot_getRawValue());
         int sz = Pot_getRawValue();
         Sampler_setHistorySize(sz);  // count potentiometer value
         sleep(1);
@@ -200,8 +205,8 @@ static void* lightSamplingThread(void *vargp)
             CircBuff_addData(&buffer, current_lightRead_voltage);
         }
         pthread_mutex_unlock(&historyBufferMutex);
-        totalSamples++;
-        update_Average_Reading(current_lightRead_voltage);              //keep track of average
+        totalSamples += 1;
+        update_Average_Reading(current_lightRead_voltage);
 
         msleep(1);
     }

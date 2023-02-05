@@ -36,22 +36,16 @@ static status buffer_pushback(circular_buffer *b, double pr_reading)
 {
     if (b->maxBufferSize == 0)
     {
-        return SUCCESS; // don't write anything to size 0
+        return SUCCESS;                          // don't write anything to size 0
     }
 
-    int next = b->head + 1;                     // pointer after write
+    b->historyBuffer[b->head] = pr_reading;      // add data to buffer
 
-    if (next >= b->maxBufferSize)               // restart at first index once completely circled 
-        next = 0;
+    int next = b->head + 1;                      // pointer after write
+    if (next >= b->maxBufferSize) {  next = 0; } // restart at first index once completely circled 
+    b->head = next;                              // set front of array
 
-    // if (next == b->tail)                     // 
-    //     return FAIL;
-
-    b->historyBuffer[b->head] = pr_reading;     // add data to buffer
-    b->head = next;                             // set front of array
-
-    if (!(b->validItemCount + 1 > b->maxBufferSize))
-        b->validItemCount += 1;
+    if (!(b->validItemCount + 1 > b->maxBufferSize)) { b->validItemCount += 1; }
     
     return SUCCESS;
 }
@@ -60,7 +54,6 @@ static status buffer_pushback(circular_buffer *b, double pr_reading)
 void CircBuff_buffFree(circular_buffer *buffer)
 {
     buffer->head = 0;
-    // buffer->tail = 0;
     buffer->maxBufferSize = 0;
     buffer->validItemCount = 0;
     free(buffer->historyBuffer);
@@ -71,7 +64,7 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 {
     // use of int to avoid underflow from counting backwards
     int oldBufSize = buffer->maxBufferSize;
-    if (oldBufSize == size) { return; }
+    if (size < oldBufSize + 2 && size > oldBufSize - 2) { return; }    // hysteresis value of +-2
 
     double *oldBuf = buffer->historyBuffer;
 
@@ -140,9 +133,9 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 
 void CircBuff_addData(circular_buffer *buffer, double pr_reading)
 {
-    if (buffer_pushback(buffer,pr_reading)==FAIL){
+    if (buffer_pushback(buffer,pr_reading) == FAIL)
+    {
         printf("Error loading to buffer\n");
-        // printf("Final array size: %i\n",Sampler_getNumSamplesInHistory());
     }
 }
 
