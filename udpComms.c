@@ -21,7 +21,7 @@
 #define CMD_COUNT "count\n"
 #define CMD_LENGTH "length\n"
 #define CMD_HISTORY "history\n"
-#define CMD_GET_N "get 10\n"
+#define CMD_GET_N "get "
 #define CMD_DIPS "dips\n"
 #define CMD_STOP "stop\n"
 #define ENTER "\n"
@@ -107,7 +107,7 @@ static void* udpCommandThread(void *vargp)
 			strcat(sendBuffer, "count       -- display total number of samples taken.\n");
 			strcat(sendBuffer, "length      -- display number of samples in history (both max, and current).\n");
 			strcat(sendBuffer, "history     -- display the full sample history being saved.\n");
-			strcat(sendBuffer, "get 10      -- display the 10 most recent history values.\n");
+			strcat(sendBuffer, "get n      -- display the n most recent history values.\n");
             strcat(sendBuffer, "dips        -- display number of photoresistor dips.\n");
 			strcat(sendBuffer, "stop        -- cause the server program to end.\n");
             strcat(sendBuffer, "<enter>     -- repeat last command.\n");
@@ -124,11 +124,18 @@ static void* udpCommandThread(void *vargp)
 			sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
 		}
         else if(strcmp(recvBuffer, CMD_HISTORY) == 0){
-            //stub
+            int historySize = Sampler_getHistorySize();
+            double *historyBuf = Sampler_getHistoryInOrder(historySize);
+            // TODO: split and send UDP packets
+            free(historyBuf);
         }
 
-        else if (strcmp(recvBuffer, CMD_GET_N) == 0){
-            //stub
+        else if (strncmp(recvBuffer, CMD_GET_N, 4) == 0){
+            char *startOfN = recvBuffer + 4; // 4th position is the start of n
+            int n = atoi(startOfN);
+            double *historyBuf = Sampler_getHistoryInOrder(n);
+            // TODO: split and send UDP packets
+            free(historyBuf);
         }
 
         else if (strcmp(recvBuffer, CMD_DIPS) == 0){

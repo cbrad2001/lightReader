@@ -144,7 +144,6 @@ size_t CircBuff_numValidValues(circular_buffer *buffer)
     return buffer->validItemCount;
 }
 
-// Returns a copy of the buffer as a regular array.
 double* CircBuff_getDoubleCopy(circular_buffer *buffer, int length)
 {
     if (length == 0)
@@ -162,5 +161,34 @@ double* CircBuff_getDoubleCopy(circular_buffer *buffer, int length)
     {
         toReturn[i] = buffer->historyBuffer[i];
     }
+
+
+    return toReturn;
+}
+
+double* CircuBuff_getCopyInOrder(circular_buffer *buffer, int length)
+{
+    if (length == 0)
+    {
+        return NULL;
+    }
+
+    if (length > buffer->validItemCount)
+    {
+        length = buffer->validItemCount;
+    }
+
+    double* toReturn = (double*)malloc(length*sizeof(double));
+    int sourcePos = buffer->head;
+    int destPos = length - 1;
+    while (destPos >= 0) {
+        toReturn[destPos] = buffer->historyBuffer[sourcePos];
+        
+        if (sourcePos == 0) { sourcePos = buffer->maxBufferSize - 1; }
+        else { sourcePos -= 1; }
+
+        destPos -= 1;
+    }
+
     return toReturn;
 }

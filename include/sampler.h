@@ -38,6 +38,11 @@ long long Sampler_getNumSamplesTaken(void);
 //get every Nth sample
 void Sampler_printEveryNth(int n);
 
-
+// Get a copy of the samples in the order that they were taken.
+// Ordered by oldest to newest sample.
+// The calling code must call free() on the returned pointer.
+// If the length > current history size, then the returned history size will be
+// trimmed to the current history size.
+double* Sampler_getHistoryInOrder(int length);
 
 #endif

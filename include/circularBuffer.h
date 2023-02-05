@@ -37,4 +37,7 @@ size_t CircBuff_numValidValues(circular_buffer *buffer);
 // Returns a copy of the buffer as a regular array.
 double* CircBuff_getDoubleCopy(circular_buffer *buffer, int length);
 
+// Returns a copy of the buffer as a regular array order by samples in ascending time taken.
+double* CircuBuff_getCopyInOrder(circular_buffer *buffer, int length);
+
 #endif
