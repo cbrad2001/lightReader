@@ -1,0 +1,205 @@
+myvm@myvm-VirtualBox:~/Documents/CMPT_433/work/433as2$ gdb-multiarch noworky
+GNU gdb (Ubuntu 10.2-0ubuntu1~20.04~1) 10.2
+Copyright (C) 2021 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+noworky: No such file or directory.
+(gdb) target remote 192.168.7.2:2001
+Remote debugging using 192.168.7.2:2001
+Reading /mnt/remote/myApps/noworky from remote target...
+warning: File transfers from remote targets can be slow. Use "set sysroot" to access files locally instead.
+Reading /mnt/remote/myApps/noworky from remote target...
+Reading symbols from target:/mnt/remote/myApps/noworky...
+Reading /lib/ld-linux-armhf.so.3 from remote target...
+Reading /lib/ld-linux-armhf.so.3 from remote target...
+Reading symbols from target:/lib/ld-linux-armhf.so.3...
+Reading /lib/17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+Reading /lib/.debug/17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+Reading /usr/lib/debug//lib/17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+Reading /usr/lib/debug/lib//17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+Reading target:/usr/lib/debug/lib//17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+(No debugging symbols found in target:/lib/ld-linux-armhf.so.3)
+0xb6fd5a80 in ?? () from target:/lib/ld-linux-armhf.so.3
+(gdb) cont
+Continuing.
+Reading /lib/arm-linux-gnueabihf/libc.so.6 from remote target...
+Reading /lib/arm-linux-gnueabihf/7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+Reading /lib/arm-linux-gnueabihf/.debug/7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+Reading /usr/lib/debug//lib/arm-linux-gnueabihf/7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+Reading /usr/lib/debug/lib/arm-linux-gnueabihf//7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+Reading target:/usr/lib/debug/lib/arm-linux-gnueabihf//7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+
+Program received signal SIGSEGV, Segmentation fault.
+0x004005b6 in swapContent (d1=0x410ff8, d2=0x411050) at noworky.c:19
+19		*d1 = tmp;
+(gdb) bt
+#0  0x004005b6 in swapContent (d1=0x410ff8, d2=0x411050) at noworky.c:19
+#1  0x004005ee in tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+#2  0x004006f2 in main () at noworky.c:72
+(gdb) list 29
+24	 */
+25	void tradeArrays(double *array1, double *array2, int size)
+26	{
+27		unsigned int i;
+28		for (i = size-1; i >= 0; i--) {
+29			swapContent(array1+i, array2+i);
+30		}
+31	}
+32	
+33	/*
+(gdb) up
+#1  0x004005ee in tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) quit
+A debugging session is active.
+
+	Inferior 1 [process 1695] will be killed.
+
+Quit anyway? (y or n) y
+myvm@myvm-VirtualBox:~/Documents/CMPT_433/work/433as2$ gdb-multiarch noworky
+GNU gdb (Ubuntu 10.2-0ubuntu1~20.04~1) 10.2
+Copyright (C) 2021 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+noworky: No such file or directory.
+(gdb) target remote 192.168.7.2:2001
+Remote debugging using 192.168.7.2:2001
+Reading /mnt/remote/myApps/noworky from remote target...
+warning: File transfers from remote targets can be slow. Use "set sysroot" to access files locally instead.
+Reading /mnt/remote/myApps/noworky from remote target...
+Reading symbols from target:/mnt/remote/myApps/noworky...
+Reading /lib/ld-linux-armhf.so.3 from remote target...
+Reading /lib/ld-linux-armhf.so.3 from remote target...
+Reading symbols from target:/lib/ld-linux-armhf.so.3...
+Reading /lib/17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+Reading /lib/.debug/17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+Reading /usr/lib/debug//lib/17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+Reading /usr/lib/debug/lib//17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+Reading target:/usr/lib/debug/lib//17f0bca2ae53f327681aa4c81f6d849c5d5fe2.debug from remote target...
+(No debugging symbols found in target:/lib/ld-linux-armhf.so.3)
+0xb6fd5a80 in ?? () from target:/lib/ld-linux-armhf.so.3
+(gdb) b 29
+Breakpoint 1 at 0x4005d8: file noworky.c, line 29.
+(gdb) cont
+Continuing.
+Reading /lib/arm-linux-gnueabihf/libc.so.6 from remote target...
+Reading /lib/arm-linux-gnueabihf/7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+Reading /lib/arm-linux-gnueabihf/.debug/7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+Reading /usr/lib/debug//lib/arm-linux-gnueabihf/7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+Reading /usr/lib/debug/lib/arm-linux-gnueabihf//7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+Reading target:/usr/lib/debug/lib/arm-linux-gnueabihf//7e3cad4070da5965d7c8ba10334e9058d0eb60.debug from remote target...
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) list 29
+24	 */
+25	void tradeArrays(double *array1, double *array2, int size)
+26	{
+27		unsigned int i;
+28		for (i = size-1; i >= 0; i--) {
+29			swapContent(array1+i, array2+i);
+30		}
+31	}
+32	
+33	/*
+(gdb) print i
+$1 = 9
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) print i
+$2 = 5
+(gdb) step 5
+tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:28
+28		for (i = size-1; i >= 0; i--) {
+(gdb) print i
+$3 = 5
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) cont
+Continuing.
+
+Breakpoint 1, tradeArrays (array1=0x412598, array2=0x4125f0, size=10) at noworky.c:29
+29			swapContent(array1+i, array2+i);
+(gdb) print i
+$4 = 4294967295
+(gdb) list 29
+24	 */
+25	void tradeArrays(double *array1, double *array2, int size)
+26	{
+27		unsigned int i;
+28		for (i = size-1; i >= 0; i--) {
+29			swapContent(array1+i, array2+i);
+30		}
+31	}
+32	
+33	/*
+(gdb) quit
+A debugging session is active.
+
+	Inferior 1 [process 1699] will be killed.
+
+Quit anyway? (y or n) y
+
