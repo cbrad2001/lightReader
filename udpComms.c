@@ -24,7 +24,7 @@
 #define CMD_COUNT   "count\n"
 #define CMD_LENGTH  "length\n"
 #define CMD_HISTORY "history\n"     //todo
-#define CMD_GET_N   "get\n"         //todo
+#define CMD_GET_N   "get "         //todo
 #define CMD_DIPS    "dips\n"
 #define CMD_STOP    "stop\n"
 #define ENTER       '\n'
@@ -149,28 +149,32 @@ static void* udpCommandThread(void *vargp)
             int n = atoi(startOfN);
             double *historyBuf = Sampler_getHistoryInOrder(n);
             int historyBufSize = Sampler_getHistorySize();
-            sprintf(sendBuffer, "N most recent:\n");
+            memset(sendBuffer, 0, MAX_LEN); // 1024 bytes per buffer
 
-            // TODO: 
-            // Most recent means we will have to start at the head and go backwards N elements. 
-            // include support for if the head counts back to 0, then to resize properly. 
-            for (int i = 0; i < n; i++)   //print every nth
+            if (n > historyBufSize)
             {
-                double val = historyBuf[i];
-                if (val != INVALID_VAL)
+                char *errMsg = "The value given is greater than the number of valid samples in the history. Please set it to under ";
+                sprintf(sendBuffer, "%s %d.\n", errMsg, historyBufSize);
+                sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
+            }
+            else if (n < 0)
+            {
+                char *errMsg = "Please give a valid non-negative number.";
+                sprintf(sendBuffer, "%s\n", errMsg);
+                sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
+            }
+            else {
+                // sprintf(sendBuffer, "N most recent:\n");
+                int currentPos = 0;
+                while (currentPos < n)
                 {
-                    char currVal[MAX_LEN];
-                    sprintf(currVal, "%.3f, ", val);
-                    strcat(sendBuffer, currVal);
-                }
-                if (i % 20 == 0)    //newline every 20th index for clarity
-                {
-                    strcat(sendBuffer, "\n");
+                    // 7 characters sent per sample
+                    snprintf(sendBuffer, "%.3d, ", historyBuf[currentPos]);
+                    sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
+                    memset(sendBuffer, 0, MAX_LEN);
+                    currentPos += 1;
                 }
             }
-            if (historyBufSize%20 != 0)
-                strcat(sendBuffer, "\n");
-
             free(historyBuf);
         }
 
