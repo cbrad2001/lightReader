@@ -48,7 +48,8 @@ static int i2cFileDesc;
 static void editReading(char* fileName, char* val)
 {
     FILE* pfile = fopen(fileName, "w");
-	if (pfile == NULL) {
+	if (pfile == NULL) 
+	{
 		printf("ERROR: Unable to open file.\n");
 		exit(1);
 	}
@@ -60,9 +61,9 @@ static void editReading(char* fileName, char* val)
 static int initI2cBus(char* bus, int address)
 {
 	i2cFileDesc = open(bus, O_RDWR);
-
 	int result = ioctl(i2cFileDesc, I2C_SLAVE, address);
-	if (result < 0) {
+	if (result < 0) 
+	{
 		perror("Unable to set I2C device to slave address.");
 		exit(-1);
 	}
@@ -75,7 +76,8 @@ static void writeI2cReg(int i2cFileDescr, unsigned char regAddr, unsigned char v
 	buff[0] = regAddr;
 	buff[1] = value;
 	int res = write(i2cFileDescr, buff, 2);
-	if (res != 2) {
+	if (res != 2) 
+	{
 		perror("Unable to write i2c register");
 		exit(-1);
 	}
@@ -123,7 +125,8 @@ void Analog_stopDisplaying(void)
     pthread_join(anDisplayThreadID, NULL);
 }
 
-static int firstDigit_Hex(int val){
+static int firstDigit_Hex(int val)
+{
     switch (val){
 		case 0:
 			return 0xA1;
@@ -150,7 +153,8 @@ static int firstDigit_Hex(int val){
 	}
 }
 
-static int secondDigit_Hex(int val){
+static int secondDigit_Hex(int val)
+{
     switch (val){
 		case 0:
 			return 0x86;
@@ -179,8 +183,8 @@ static int secondDigit_Hex(int val){
 
 static void* dipHistoryToDisplay(void *vargp)
 {
-    while(1){
-
+    while(1)
+	{
         //display 01-99
         int num_to_display = Sampler_analyzeDips();
         int first_digit = num_to_display / 10;  //moves the decimal place one to the left

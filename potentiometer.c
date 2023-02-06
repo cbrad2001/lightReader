@@ -26,7 +26,6 @@ int Pot_getRawValue(void)
     {
         voltageVal = -1;
     }
-
     return voltageVal;
 }
 
@@ -40,7 +39,6 @@ double Pot_getVoltage(void)
         exit(1);
         return -1;
     }
-
     const int MAX_VALUE = 4095;
     const double REF_VOLT = 1.8;
     double voltage = ((double)rawValue / MAX_VALUE) * REF_VOLT;

@@ -18,7 +18,6 @@ int LightRead_getRawValue(void)
         fprintf(stderr, "Error reading the voltage for the photoresistor.\n");
         fileStatus = false;
     }
-
     const int MAX_LENGTH = 1024;
     char buf[MAX_LENGTH];
     fgets(buf, MAX_LENGTH, lightReadVoltageFile);
@@ -29,7 +28,6 @@ int LightRead_getRawValue(void)
     {
         voltageVal = -1;
     }
-
     return voltageVal;
 }
 
@@ -43,7 +41,6 @@ double LightRead_getVoltage(void)
         exit(1);
         return -1;
     }
-
     const int MAX_VALUE = 4095;
     const double REF_VOLT = 1.8;
     double voltage = ((double)rawValue / MAX_VALUE) * REF_VOLT;

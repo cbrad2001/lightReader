@@ -42,12 +42,14 @@ static void* print_to_terminal(void *vargp)
         int numSamplesInHistory = Sampler_getNumSamplesInHistory();
         //line 1: ( # light samples in last second) | (raw pot value) | (num valid samples in history) | (avg light 3dp) | (# dips) | (# samples in buffer)
 
-        printf("# Samples (1s): %lli \t" 
-               "| Raw POT value: %i \t" 
-               "| # Valid Samples: %lli \t" 
-               "| Average Light Read: %.3f \t" 
-               "| # Dips: %i\t"
+        printf("# Samples/s): %lli \t" 
+               "| Pot Value: %i \t" 
+               "| History Size: %lli \t" 
+               "| Light AVG: %.3f \t" 
+               "| Dips: %i\t"
                "| Valid Samples in Buffer %u\n", sampleVal_lastS, POT_val, totalSamples, avg_light, dips, numSamplesInHistory);
+        //#todo Sampling [starttime,endtime] avg 
+
 
         //line 2: (every 200th sample in history)
         Sampler_printEveryNth(200);

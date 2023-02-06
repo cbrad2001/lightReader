@@ -52,10 +52,13 @@ void Period_markEvent(enum Period_whichEvent whichEvent)
     timestamps_t *pData = &s_eventData[whichEvent];
     pthread_mutex_lock(&s_lock);
     {
-        if (pData->timestampCount < MAX_EVENT_TIMESTAMPS) {
+        if (pData->timestampCount < MAX_EVENT_TIMESTAMPS) 
+        {
             pData->timestampsInNs[pData->timestampCount] = getTimeInNanoS();
             pData->timestampCount++;
-        } else {
+        } 
+        else 
+        {
             printf("WARNING: No sample space for event collection on %d\n", whichEvent);
         }
     }
@@ -76,7 +79,8 @@ void Period_getStatisticsAndClear(
         updateStats(pData, pStats);
 
         // Update the "previous" sample (if we have any)
-        if (pData->timestampCount > 0) {
+        if (pData->timestampCount > 0) 
+        {
             pData->prevTimestampInNs = pData->timestampsInNs[pData->timestampCount - 1];
         }
 
@@ -94,7 +98,8 @@ static void updateStats(
     long long prevInNs = pData->prevTimestampInNs;
 
     // Handle startup (no previous sample)
-    if (prevInNs == 0) {
+    if (prevInNs == 0) 
+    {
         prevInNs = pData->timestampsInNs[0];
     }
     
@@ -107,10 +112,12 @@ static void updateStats(
         long long deltaNs = thisTime - prevInNs;
         sumDeltasNs += deltaNs;
 
-        if (i == 0 || deltaNs < minNs) {
+        if (i == 0 || deltaNs < minNs) 
+        {
             minNs = deltaNs;
         }
-        if (i == 0 || deltaNs > maxNs) {
+        if (i == 0 || deltaNs > maxNs) 
+        {
             maxNs = deltaNs;
         }
 
@@ -118,7 +125,8 @@ static void updateStats(
     }
 
     long long avgNs = 0;
-    if (pData->timestampCount > 0) {
+    if (pData->timestampCount > 0) 
+    {
         avgNs = sumDeltasNs / pData->timestampCount;
     } 
 

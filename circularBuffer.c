@@ -181,7 +181,8 @@ double* CircuBuff_getCopyInOrder(circular_buffer *buffer, int length)
     double* toReturn = (double*)malloc(length*sizeof(double));
     int sourcePos = buffer->head;
     int destPos = length - 1;
-    while (destPos >= 0) {
+    while (destPos >= 0) 
+    {
         toReturn[destPos] = buffer->historyBuffer[sourcePos];
         
         if (sourcePos == 0) { sourcePos = buffer->maxBufferSize - 1; }
