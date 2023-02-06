@@ -19,11 +19,11 @@ int main()
 	Period_init();
     Sampler_startSampling();
 	Terminal_startPrinting();
-	// Analog_startDisplaying();
+	Analog_startDisplaying();
 	udp_startSampling();
 	
 	udp_stopSampling();
-	// Analog_stopDisplaying();
+	Analog_stopDisplaying();
 	Terminal_stopPrinting();
 	Sampler_stopSampling();
 	Period_cleanup();

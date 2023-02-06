@@ -10,15 +10,18 @@
 #include <unistd.h>
 #include <fcntl.h> 
 #include <unistd.h> 
+#include <dirent.h>
+#include <time.h>
+#include <errno.h>
 #include <sys/ioctl.h> 
 #include <linux/i2c.h> 
 #include <linux/i2c-dev.h>
 
 #define GPIO_EXPORT_FILE "/sys/class/gpio/export"
 
-#define I2CDRV_LINUX_BUS0 "/dev /i2c-0" 
-#define I2CDRV_LINUX_BUS1 "/dev /i2c-1" 
-#define I2CDRV_LINUX_BUS2 "/dev /i2c-2"
+#define I2CDRV_LINUX_BUS0 "/dev/i2c-0" 
+#define I2CDRV_LINUX_BUS1 "/dev/i2c-1" 
+#define I2CDRV_LINUX_BUS2 "/dev/i2c-2"
 
 #define BUS1_ADDRESS 0x20
 
@@ -34,6 +37,7 @@
 #define REG_OUTB 0x15
 
 static void* dipHistoryToDisplay(void *vargp);
+static int msleep(long msec);
 
 static pthread_t anDisplayThreadID;
 // static bool isDisplayActive;
@@ -109,27 +113,39 @@ static void runCommand(char* command) {
 //complete the steps from the I2C guide (2.3) to config the board to read values 
 static int init_display()
 {
-	int i2cFileDesc = initI2cBus(I2CDRV_LINUX_BUS1, BUS1_ADDRESS);
-
 	runCommand("config-pin P9_18 i2c");         //config pins
 	runCommand("config-pin P9_17 i2c");
+	msleep(350);
 
-	editReading(GPIO_EXPORT_FILE,"61");     //set to export thru gpio
-    editReading(GPIO_EXPORT_FILE,"44");
-    printf("Test 0\n");
+	DIR *gpio61Dir = opendir("/sys/class/gpio/gpio61/");
+	if (ENOENT == errno)
+	{
+		editReading(GPIO_EXPORT_FILE,"61");
+	}
+	DIR *gpio44Dir = opendir("/sys/class/gpio/gpio44/");
+	if (ENOENT == errno) 
+	{
+		editReading(GPIO_EXPORT_FILE,"44");
+	}
+	closedir(gpio61Dir);
+	closedir(gpio44Dir);
+	gpio61Dir = NULL;
+	gpio44Dir = NULL;
+
+    // printf("Test 0\n");
     editReading(first_dir,"out");           //set direction to output
     editReading(second_dir,"out");
+	editReading(first_val,"1");             //set value to on
+    editReading(second_val,"1");
 
-	printf("Test 1\n");
+	int i2cFileDesc = initI2cBus(I2CDRV_LINUX_BUS1, BUS1_ADDRESS);
+
+	// printf("Test 1\n");
 	writeI2cReg(i2cFileDesc, REG_DIRA, 0x00);
 	writeI2cReg(i2cFileDesc, REG_DIRB, 0x00);
-	printf("Test 2\n");
+	// printf("Test 2\n");
 	writeI2cReg(i2cFileDesc, REG_OUTA, 0x00);
 	writeI2cReg(i2cFileDesc, REG_OUTB, 0x00);
-
-    // printf("Test 1\n");
-    // editReading(first_val,"1");             //set value to on
-    // editReading(second_val,"1");
     
     return i2cFileDesc;
 }
@@ -223,4 +239,26 @@ static void* dipHistoryToDisplay(void *vargp)
     }
 	close(i2cFileDesc);     //cleanup i2c access
     return 0;
+}
+
+// taken from https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
+static int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
 }
