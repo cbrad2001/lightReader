@@ -9,4 +9,7 @@
 void Terminal_startPrinting(void);
 void Terminal_stopPrinting(void);
 
+//trigger udp shutdown
+void Terminal_quit(void);
+
 #endif

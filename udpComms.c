@@ -1,5 +1,6 @@
 #include "include/udpComms.h"
 #include "include/sampler.h"
+#include "include/terminal.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +10,7 @@
 #include <netdb.h>
 #include <unistd.h>	
 #include <float.h>
+#include <stdbool.h>
 #include <pthread.h>
 #include <sys/socket.h>
 
@@ -16,56 +18,37 @@
 
 #define PORT 12345
 #define MAX_LEN 1024
+#define INVALID_VAL DBL_MAX
 
-#define CMD_HELP "help\n"
-#define CMD_COUNT "count\n"
-#define CMD_LENGTH "length\n"
-#define CMD_HISTORY "history\n"
-#define CMD_GET_N "get "
-#define CMD_DIPS "dips\n"
-#define CMD_STOP "stop\n"
-#define ENTER "\n"
+#define CMD_HELP    "help\n"
+#define CMD_COUNT   "count\n"
+#define CMD_LENGTH  "length\n"
+#define CMD_HISTORY "history\n"     //todo
+#define CMD_GET_N   "get\n"         //todo
+#define CMD_DIPS    "dips\n"
+#define CMD_STOP    "stop\n"
+#define ENTER       '\n'
 
 static pthread_t udpThreadID;
 
 static struct sockaddr_in sock;
 static int socketDescriptor;
+static bool isConnected;
 static socklen_t sock_sz;
 
 static void* udpCommandThread(void *vargp);
 
-// static void initSocket()
-// {
-//     memset(&sock, 0, sizeof(sock));
-//     sock.sin_family = AF_INET;
-//     sock.sin_addr.s_addr = htonl(INADDR_ANY);
-//     sock.sin_port = htons(PORT);
-
-//     socketDescriptor = socket(PF_INET, SOCK_DGRAM, 0);
-//     if (socketDescriptor == -1){
-//         perror("Can't create socket\n");
-//         exit(1);
-//     }
-
-//     if (bind (socketDescriptor, (struct sockaddr*) &sock, sizeof(sock)) == -1){
-//         perror("Failed to bind socket\n");
-//         exit(1);
-//     }
-//     sock_sz = sizeof(sock);
-// }
-
 void udp_startSampling(void)
 {
-    // initSocket();
+    isConnected = true;
     pthread_create(&udpThreadID, NULL, &udpCommandThread, NULL);
 }
 
 void udp_stopSampling(void)
 {
-    // close(socketDescriptor);
+    isConnected = false;
     pthread_join(udpThreadID, NULL);
 }
-
 
 static void* udpCommandThread(void *vargp)
 {
@@ -91,20 +74,22 @@ static void* udpCommandThread(void *vargp)
     char recvBuffer[MAX_LEN];
     char cmdHistory[MAX_LEN];
     char sendBuffer[MAX_LEN];
-    while(1){
+    isConnected = true;
+
+    while(isConnected){
         int bytesRx = recvfrom(socketDescriptor, recvBuffer, MAX_LEN, 0, (struct sockaddr*)&sock, &sock_sz);
         if (bytesRx == -1 )
         {
             printf("Can't receive data \n");
             exit(1);
         } 
-        recvBuffer[MAX_LEN] = '\0'; //null terminated string
 
-        if (strcmp(recvBuffer, ENTER) == 0)
+        if (recvBuffer[0] == ENTER)
         {
-            strncpy(recvBuffer, cmdHistory, MAX_LEN-1); // call prev command if 'enter'
+            strncpy(recvBuffer, cmdHistory, MAX_LEN); // call prev command if 'enter'
         }
-        strncpy(cmdHistory,recvBuffer,MAX_LEN-1);       //store history for enter command
+        strncpy(cmdHistory,recvBuffer,MAX_LEN);       //store history for enter command
+        recvBuffer[MAX_LEN] = '\0'; //null terminated string
 
         if (strcmp(recvBuffer, CMD_HELP)==0)
         {
@@ -126,7 +111,7 @@ static void* udpCommandThread(void *vargp)
 		}
         else if(strcmp(recvBuffer, CMD_LENGTH) == 0)
         {
-			sprintf(sendBuffer, "History can hold %d samples. \n Currently holding %d samples.",
+			sprintf(sendBuffer, "History can hold %d samples. \nCurrently holding %d samples.\n",
                 Sampler_getNumSamplesInHistory(),Sampler_getHistorySize());
 			sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
 		}
@@ -134,7 +119,27 @@ static void* udpCommandThread(void *vargp)
         {
             int historySize = Sampler_getHistorySize();
             double *historyBuf = Sampler_getHistoryInOrder(historySize);
-            // TODO: split and send UDP packets
+            int historyBufSize = Sampler_getHistorySize();
+            sprintf(sendBuffer, "Buffer History :\n");
+
+            for (int i = 0; i < historyBufSize; i++)    //print all elements
+                {
+                double val = historyBuf[i];
+                if (val != INVALID_VAL)
+                {
+                    char currVal[MAX_LEN];
+                    sprintf(currVal, "%.3f, ", val);
+                    strcat(sendBuffer, currVal);   // TODO: split and send UDP packets
+                }
+                if (i % 20 == 0)     //newline every 10th index for clarity
+                {
+                    strcat(sendBuffer, "\n");   // need to handle multiple packet case
+                                                // might be easier to just sent a new packet every 20?
+                }
+            }
+            if (historyBufSize%10 != 0)
+                strcat(sendBuffer, "\n");
+            
             free(historyBuf);
         }
 
@@ -143,20 +148,45 @@ static void* udpCommandThread(void *vargp)
             char *startOfN = recvBuffer + 4; // 4th position is the start of n
             int n = atoi(startOfN);
             double *historyBuf = Sampler_getHistoryInOrder(n);
-            // TODO: split and send UDP packets
+            int historyBufSize = Sampler_getHistorySize();
+            sprintf(sendBuffer, "N most recent:\n");
+
+            // TODO: 
+            // Most recent means we will have to start at the head and go backwards N elements. 
+            // include support for if the head counts back to 0, then to resize properly. 
+            for (int i = 0; i < n; i++)   //print every nth
+            {
+                double val = historyBuf[i];
+                if (val != INVALID_VAL)
+                {
+                    char currVal[MAX_LEN];
+                    sprintf(currVal, "%.3f, ", val);
+                    strcat(sendBuffer, currVal);
+                }
+                if (i % 20 == 0)    //newline every 20th index for clarity
+                {
+                    strcat(sendBuffer, "\n");
+                }
+            }
+            if (historyBufSize%20 != 0)
+                strcat(sendBuffer, "\n");
+
             free(historyBuf);
         }
 
         else if (strcmp(recvBuffer, CMD_DIPS) == 0)
         {
-            sprintf(sendBuffer, "# Dips = %i.\n",
-                Sampler_analyzeDips());
+            sprintf(sendBuffer, "# Dips = %i.\n", Sampler_analyzeDips());
+            sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
         }
-
         else if (strcmp(recvBuffer, CMD_STOP) == 0)
         {
-            //stub
-            // need to create a program wide stopping condition
+            sprintf(sendBuffer, "Program terminating: (enter to quit)\n");
+            sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
+                //these calls will shut down all the threads
+            Sampler_quit();
+            Terminal_quit();
+            isConnected = false;
         }
         else
         {

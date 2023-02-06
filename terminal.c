@@ -29,25 +29,27 @@ void Terminal_stopPrinting(void)
     pthread_join(termThreadID, NULL);
 }
 
+void Terminal_quit()
+{
+    isPrinting = false;
+}
+
 //thread repeatedly outputs specified data to screen at a 1 second rate
 static void* print_to_terminal(void *vargp)
 {
-    //every second....
     while(isPrinting){
         Period_statistics_t stats; 
         long long totalSamples = Sampler_getNumSamplesTaken();
         long long sampleVal_lastS = totalSamples - prevSampleSum;
         prevSampleSum += sampleVal_lastS;
+
         int POT_val = Pot_getRawValue();
         double avg_light = Sampler_getAverageReading();
         int dips = Sampler_analyzeDips();
-        // int numSamplesInHistory = Sampler_getNumSamplesInHistory();
 
         Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &stats);
 
-
         //line 1: ( # light samples in last second) | (raw pot value) | (num valid samples in history) | (avg light 3dp) | (# dips) | (# samples in buffer)
-
         printf("# Samples/s): %lli \t" 
                "| Pot Value: %i \t" 
                "| History Size: %lli \t" 
@@ -60,12 +62,8 @@ static void* print_to_terminal(void *vargp)
                     avg_light, 
                     dips, 
                     stats.minPeriodInMs, stats.maxPeriodInMs, stats.avgPeriodInMs,sampleVal_lastS);
-        //#todo Sampling [starttime,endtime] avg 
-
-
         //line 2: (every 200th sample in history)
         Sampler_printEveryNth(200);
-
 
         sleep(1);       //write every second
     }

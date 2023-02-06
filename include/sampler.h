@@ -9,6 +9,9 @@
 void Sampler_startSampling(void);
 void Sampler_stopSampling(void);
 
+//trigger udp shutdown
+void Sampler_quit(void);
+
 // Set/get the maximum number of samples to store in the history.
 void Sampler_setHistorySize(int newSize);
 int Sampler_getHistorySize(void);

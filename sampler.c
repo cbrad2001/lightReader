@@ -69,6 +69,11 @@ void Sampler_stopSampling(void)
     pthread_mutex_destroy(&historyBufferMutex); 
 }
 
+void Sampler_quit(void)
+{
+    isSampling = false;
+}
+
 void Sampler_setHistorySize(int newSize)
 {
     pthread_mutex_lock(&historyBufferMutex);
