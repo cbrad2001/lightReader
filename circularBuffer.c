@@ -166,7 +166,7 @@ double* CircBuff_getDoubleCopy(circular_buffer *buffer, int length)
     return toReturn;
 }
 
-double* CircuBuff_getCopyInOrder(circular_buffer *buffer, int length)
+double* CircBuff_getCopyInOrder(circular_buffer *buffer, int length)
 {
     if (length == 0)
     {
