@@ -2,6 +2,7 @@
 #include "include/potentiometer.h"
 #include "include/photoresistor.h"
 #include "include/circularBuffer.h"
+#include "include/periodTimer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -213,7 +214,7 @@ static void* potThread(void *vargp)
 static void* lightSamplingThread(void *vargp)
 {
     while(isSampling){
-        
+        Period_markEvent(PERIOD_EVENT_SAMPLE_LIGHT);
         double current_lightRead_voltage = LightRead_getVoltage();
         pthread_mutex_lock(&historyBufferMutex);
         {

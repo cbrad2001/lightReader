@@ -1,6 +1,7 @@
 #include "include/sampler.h"
 #include "include/terminal.h"
 #include "include/potentiometer.h"
+#include "include/periodTimer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,13 +34,18 @@ static void* print_to_terminal(void *vargp)
 {
     //every second....
     while(isPrinting){
+        Period_statistics_t stats; 
         long long totalSamples = Sampler_getNumSamplesTaken();
         long long sampleVal_lastS = totalSamples - prevSampleSum;
         prevSampleSum += sampleVal_lastS;
         int POT_val = Pot_getRawValue();
         double avg_light = Sampler_getAverageReading();
         int dips = Sampler_analyzeDips();
-        int numSamplesInHistory = Sampler_getNumSamplesInHistory();
+        // int numSamplesInHistory = Sampler_getNumSamplesInHistory();
+
+        Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &stats);
+
+
         //line 1: ( # light samples in last second) | (raw pot value) | (num valid samples in history) | (avg light 3dp) | (# dips) | (# samples in buffer)
 
         printf("# Samples/s): %lli \t" 
@@ -47,7 +53,13 @@ static void* print_to_terminal(void *vargp)
                "| History Size: %lli \t" 
                "| Light AVG: %.3f \t" 
                "| Dips: %i\t"
-               "| Valid Samples in Buffer %u\n", sampleVal_lastS, POT_val, totalSamples, avg_light, dips, numSamplesInHistory);
+               "| Sampling[%.3f, %.3f] avg %.3f/%lli\n", 
+                    sampleVal_lastS, 
+                    POT_val, 
+                    totalSamples, 
+                    avg_light, 
+                    dips, 
+                    stats.minPeriodInMs, stats.maxPeriodInMs, stats.avgPeriodInMs,sampleVal_lastS);
         //#todo Sampling [starttime,endtime] avg 
 
 

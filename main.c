@@ -8,6 +8,7 @@
 #include "include/terminal.h"
 #include "include/analogDisplay.h"
 #include "include/udpComms.h"
+#include "include/periodTimer.h"
 
 
 /**
@@ -15,6 +16,7 @@
 */
 int main()
 {
+	Period_init();
     Sampler_startSampling();
 	Terminal_startPrinting();
 	// Analog_startDisplaying();
@@ -24,6 +26,7 @@ int main()
 	// Analog_stopDisplaying();
 	Terminal_stopPrinting();
 	Sampler_stopSampling();
+	Period_cleanup();
 	
     return 0;
 

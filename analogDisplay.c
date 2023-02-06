@@ -36,7 +36,6 @@
 static void* dipHistoryToDisplay(void *vargp);
 
 static pthread_t anDisplayThreadID;
-static int i2cFileDesc;
 // static bool isDisplayActive;
 
 /**
@@ -60,7 +59,7 @@ static void editReading(char* fileName, char* val)
 //provided code by I2C guide
 static int initI2cBus(char* bus, int address)
 {
-	i2cFileDesc = open(bus, O_RDWR);
+	int i2cFileDesc = open(bus, O_RDWR);
 	int result = ioctl(i2cFileDesc, I2C_SLAVE, address);
 	if (result < 0) 
 	{
@@ -83,44 +82,67 @@ static void writeI2cReg(int i2cFileDescr, unsigned char regAddr, unsigned char v
 	}
 }
 
+static void runCommand(char* command) {    
+	// Execute the shell command (output into pipe)    
+	FILE *pipe = popen(command, "r");    
+	// Ignore output of the command; but consume it     
+	// so we don't get an error when closing the pipe.    
+	char buffer[1024];    
+	while (!feof(pipe) && !ferror(pipe)) 
+	{        
+		if (fgets(buffer, sizeof(buffer), pipe) == NULL)            
+			break;        
+		// printf("--> %s", buffer);  // Uncomment for debugging    
+	}    
+	// Get the exit code from the pipe; non-zero is an error:    
+	int exitCode = WEXITSTATUS(pclose(pipe));    
+	if (exitCode != 0) 
+	{        
+		perror("Unable to execute command:");        
+		printf("  command:   %s\n", command);        
+		printf("  exit code: %d\n", exitCode);    
+	} 
+}
+
 // SETUP:
 
 //complete the steps from the I2C guide (2.3) to config the board to read values 
-static void basicSetup()
+static int init_display()
 {
-    editReading(GPIO_EXPORT_FILE,"61");     //set to export thru gpio
+	int i2cFileDesc = initI2cBus(I2CDRV_LINUX_BUS1, BUS1_ADDRESS);
+
+	runCommand("config-pin P9_18 i2c");         //config pins
+	runCommand("config-pin P9_17 i2c");
+
+	editReading(GPIO_EXPORT_FILE,"61");     //set to export thru gpio
     editReading(GPIO_EXPORT_FILE,"44");
     printf("Test 0\n");
     editReading(first_dir,"out");           //set direction to output
     editReading(second_dir,"out");
-    printf("Test 1\n");
-    editReading(first_val,"1");             //set value to on
-    editReading(second_val,"1");
-    printf("Test 2\n");
 
-    system("config-pin P9_18 i2c");         //config pins
-	system("config-pin P9_17 i2c");
+	printf("Test 1\n");
+	writeI2cReg(i2cFileDesc, REG_DIRA, 0x00);
+	writeI2cReg(i2cFileDesc, REG_DIRB, 0x00);
+	printf("Test 2\n");
+	writeI2cReg(i2cFileDesc, REG_OUTA, 0x00);
+	writeI2cReg(i2cFileDesc, REG_OUTB, 0x00);
+
+    // printf("Test 1\n");
+    // editReading(first_val,"1");             //set value to on
+    // editReading(second_val,"1");
+    
+    return i2cFileDesc;
 }
 
 // Running code: 
 
 void Analog_startDisplaying(void)
 {
-    basicSetup();
-    i2cFileDesc = initI2cBus(I2CDRV_LINUX_BUS1, BUS1_ADDRESS);
-
-	writeI2cReg(i2cFileDesc, REG_DIRA, 0x00);
-	writeI2cReg(i2cFileDesc, REG_DIRB, 0x00);
-	printf("Test 3\n");
-
-    // isDisplayActive = true;
-
     pthread_create(&anDisplayThreadID, NULL, &dipHistoryToDisplay, NULL);
 }
 
 void Analog_stopDisplaying(void)
 {
-    close(i2cFileDesc);     //cleanup i2c access
     // isDisplayActive = false;
     pthread_join(anDisplayThreadID, NULL);
 }
@@ -183,6 +205,7 @@ static int secondDigit_Hex(int val)
 
 static void* dipHistoryToDisplay(void *vargp)
 {
+	int i2cFileDesc = init_display();
     while(1)
 	{
         //display 01-99
@@ -198,5 +221,6 @@ static void* dipHistoryToDisplay(void *vargp)
 
         sleep(.01);      //update 10 times per second
     }
+	close(i2cFileDesc);     //cleanup i2c access
     return 0;
 }
