@@ -14,7 +14,8 @@
 #include <errno.h>
 
 #define EXPONENTIAL_WEIGHTING_VALUE 0.001   //prev average weighed at 99.9%
-#define LIGHT_DIP_DIFFERENCE_V 0.1 // volts
+#define LIGHT_DIP_DIFFERENCE_V 0.1          //volts
+#define HYSTERESIS_CONSTANT 0.03            //volts
 
 // temp test function
 static int msleep(long msec);
@@ -31,7 +32,7 @@ static bool isSampling;
 static long long totalSamples;
 static circular_buffer buffer;
 
-static double filtered_average;     //average value based on exponential smoothing  (v.n)
+static double filtered_average;             //average value based on exponential smoothing  (v.n)
 
 void Sampler_startSampling(void)
 {
@@ -149,8 +150,8 @@ int Sampler_analyzeDips()
             break; // unlikely this will ever trigger
         }
 
-        bool isDip = (validHistory[i] - 0.03 <= (currAvg - LIGHT_DIP_DIFFERENCE_V)) && 
-            (validHistory[i] + 0.03 <= (currAvg - LIGHT_DIP_DIFFERENCE_V)); // check for hysterisis bounds
+        bool isDip = (validHistory[i] - HYSTERESIS_CONSTANT <= (currAvg - LIGHT_DIP_DIFFERENCE_V)) && 
+            (validHistory[i] + HYSTERESIS_CONSTANT <= (currAvg - LIGHT_DIP_DIFFERENCE_V)); // check for hysterisis bounds
         if (isDip && dipAvailable)
         {
             dipCount += 1;
@@ -172,11 +173,14 @@ long long Sampler_getNumSamplesTaken(void)
     return totalSamples;
 }
 
-void Sampler_printEveryNth(int n){
+void Sampler_printEveryNth(int n)
+{
     printf("Sample values: ");
-    for (int i = 0; i < buffer.maxBufferSize; i+=n){
+    for (int i = 0; i < buffer.maxBufferSize; i+=n)
+    {
         double val = buffer.historyBuffer[i];
-        if (val != INVALID_VAL){
+        if (val != INVALID_VAL)
+        {
             printf("%.4f\t| ",val);
         }
     }
