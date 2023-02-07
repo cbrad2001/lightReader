@@ -40,6 +40,7 @@ static void* dipHistoryToDisplay(void *vargp);
 static int msleep(long msec);
 
 static pthread_t anDisplayThreadID;
+static bool isDisplaying;
 // static bool isDisplayActive;
 
 /**
@@ -132,34 +133,40 @@ static int init_display()
 	gpio61Dir = NULL;
 	gpio44Dir = NULL;
 
-    // printf("Test 0\n");
     editReading(first_dir,"out");           //set direction to output
     editReading(second_dir,"out");
-	editReading(first_val,"1");             //set value to on
-    editReading(second_val,"1");
+	editReading(first_val,"0");             //set value to on
+    editReading(second_val,"0");
 
 	int i2cFileDesc = initI2cBus(I2CDRV_LINUX_BUS1, BUS1_ADDRESS);
 
-	// printf("Test 1\n");
 	writeI2cReg(i2cFileDesc, REG_DIRA, 0x00);
 	writeI2cReg(i2cFileDesc, REG_DIRB, 0x00);
-	// printf("Test 2\n");
+
 	writeI2cReg(i2cFileDesc, REG_OUTA, 0x00);
 	writeI2cReg(i2cFileDesc, REG_OUTB, 0x00);
     
     return i2cFileDesc;
 }
 
+void Analog_quit()
+{
+    isDisplaying = false;
+}
+
 // Running code: 
 
 void Analog_startDisplaying(void)
 {
+	isDisplaying = true;
     pthread_create(&anDisplayThreadID, NULL, &dipHistoryToDisplay, NULL);
 }
 
 void Analog_stopDisplaying(void)
 {
-    // isDisplayActive = false;
+	editReading(first_val,"0");             // turn off readings on end
+    editReading(second_val,"0");
+    isDisplaying = false;
     pthread_join(anDisplayThreadID, NULL);
 }
 
@@ -219,29 +226,42 @@ static int secondDigit_Hex(int val)
 	}
 }
 
+// live report of the current dip count onto the zencape's i2c display.
+// displays 0 when no dips, up to a maximum 99 
 static void* dipHistoryToDisplay(void *vargp)
 {
 	int i2cFileDesc = init_display();
-    while(1)
+	isDisplaying = true;
+    while(isDisplaying)
 	{
-        //display 01-99
+        
         int num_to_display = Sampler_analyzeDips();
-        int first_digit = num_to_display / 10;  //moves the decimal place one to the left
-        int second_digit = num_to_display % 10; //extracts the first num
+        int first_digit = num_to_display / 10;  	//moves the decimal place one to the left
+        int second_digit = num_to_display % 10; 	//extracts the first num
 
-        if (first_digit > 9) { first_digit = 9; };
-        if (second_digit> 9) { second_digit= 9; };
-
+        if (num_to_display >= 99) 					//display 01-99
+		{ 
+			first_digit = 9; 						// dip count over 100 rounds to 99
+			second_digit= 9;
+		}	
+       	
+		editReading(first_val,"0");             	//set value to on
+		editReading(second_val,"1");				// first digit (upper and lower halfs)
+		msleep(5);									// sleep 5 ms after turning on per guide
         writeI2cReg(i2cFileDesc, REG_OUTA, firstDigit_Hex(first_digit));
+        writeI2cReg(i2cFileDesc, REG_OUTB, secondDigit_Hex(first_digit));
+		editReading(first_val,"1");             	//set value to on
+		editReading(second_val,"0");
+		msleep(5);
+		writeI2cReg(i2cFileDesc, REG_OUTA, firstDigit_Hex(second_digit));
         writeI2cReg(i2cFileDesc, REG_OUTB, secondDigit_Hex(second_digit));
-
-        sleep(.01);      //update 10 times per second
     }
-	close(i2cFileDesc);     //cleanup i2c access
+	close(i2cFileDesc);     						//cleanup i2c access
     return 0;
 }
 
 // taken from https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
+// sleep for x ms
 static int msleep(long msec)
 {
     struct timespec ts;

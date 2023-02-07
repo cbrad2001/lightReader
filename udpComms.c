@@ -1,6 +1,7 @@
 #include "include/udpComms.h"
 #include "include/sampler.h"
 #include "include/terminal.h"
+#include "include/analogDisplay.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -23,8 +24,8 @@
 #define CMD_HELP    "help\n"
 #define CMD_COUNT   "count\n"
 #define CMD_LENGTH  "length\n"
-#define CMD_HISTORY "history\n"     //todo
-#define CMD_GET_N   "get "         //todo
+#define CMD_HISTORY "history\n"     
+#define CMD_GET_N   "get "        
 #define CMD_DIPS    "dips\n"
 #define CMD_STOP    "stop\n"
 #define ENTER       '\n'
@@ -89,7 +90,8 @@ static void* udpCommandThread(void *vargp)
             strncpy(recvBuffer, cmdHistory, MAX_LEN); // call prev command if 'enter'
         }
         strncpy(cmdHistory,recvBuffer,MAX_LEN);       //store history for enter command
-        recvBuffer[MAX_LEN] = '\0'; //null terminated string
+        // recvBuffer[MAX_LEN] = '\0'; //null terminated string
+        // cmdHistory[MAX_LEN] = '\0';
 
         if (strcmp(recvBuffer, CMD_HELP)==0)
         {
@@ -120,28 +122,40 @@ static void* udpCommandThread(void *vargp)
             int historySize = Sampler_getHistorySize();
             double *historyBuf = Sampler_getHistoryInOrder(historySize);
             int historyBufSize = Sampler_getHistorySize();
-            memset(sendBuffer, 0, historyBufSize); // 1024 bytes per buffer
+            memset(sendBuffer, 0, historyBufSize);      //1024 bytes per buffer
 
             for (int i = 0; i < historyBufSize; i++)    //print all elements
             {
                 double val = historyBuf[i];
-                
-                if (val != INVALID_VAL)
+                if (val != INVALID_VAL)                 
                 {
-                    sprintf(sendBuffer, "%.3f, ", val);
-                    if ((i+1) % 20 == 0)     //newline every 10th index for clarity
+                    sprintf(sendBuffer, "%.3f, ", val); //send all valid elements of history
+                    if ((i+1) % 20 == 0)                //newline every 20th index for clarity
                     {
-                        strcat(sendBuffer, "\n");   // need to handle multiple packet case
-                                                // might be easier to just sent a new packet every 20?
+                        strcat(sendBuffer, "\n");  
                     }
                 sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
                 }
             }
+            free(historyBuf);
             char* newln = "\n";
             sendto(socketDescriptor,newln, strnlen(newln,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
-            free(historyBuf);
         }
-
+        else if (strcmp(recvBuffer, CMD_DIPS) == 0)
+        {
+            sprintf(sendBuffer, "# Dips = %i.\n", Sampler_analyzeDips());
+            sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
+        }
+        else if (strcmp(recvBuffer, CMD_STOP) == 0)
+        {
+            sprintf(sendBuffer, "Program terminating: (enter to quit)\n");
+            sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
+                //these calls will shut down all the threads
+            Sampler_quit();
+            Terminal_quit();
+            Analog_quit();
+            isConnected = false;
+        }
         else if (strncmp(recvBuffer, CMD_GET_N, 4) == 0)
         {
             char *startOfN = recvBuffer + 4; // 4th position is the start of n
@@ -181,21 +195,6 @@ static void* udpCommandThread(void *vargp)
             char* newln = "\n";
             sendto(socketDescriptor,newln, strnlen(newln,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
             free(historyBuf);
-        }
-
-        else if (strcmp(recvBuffer, CMD_DIPS) == 0)
-        {
-            sprintf(sendBuffer, "# Dips = %i.\n", Sampler_analyzeDips());
-            sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
-        }
-        else if (strcmp(recvBuffer, CMD_STOP) == 0)
-        {
-            sprintf(sendBuffer, "Program terminating: (enter to quit)\n");
-            sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
-                //these calls will shut down all the threads
-            Sampler_quit();
-            Terminal_quit();
-            isConnected = false;
         }
         else
         {
