@@ -24,8 +24,8 @@ void swapContent(double *d1, double *d2)
  */
 void tradeArrays(double *array1, double *array2, int size)
 {
-	// unsigned int i; //unsigned int will never be less than zero
-	int i;
+	// unsigned int i;  // BUG HERE: It was an unsigned int which will never be less than zero
+	int i;				// Changing to int does not create garbage values. 
 	for (i = size-1; i >= 0; i--) {
 		swapContent(array1+i, array2+i);
 	}
