@@ -120,8 +120,8 @@ static void* udpCommandThread(void *vargp)
         {
             int historySize = Sampler_getHistorySize();
             double *historyBuf = Sampler_getHistoryInOrder(historySize);
-            int historyBufSize = Sampler_getHistorySize();
-            memset(sendBuffer, 0, historyBufSize);      //1024 bytes per buffer
+            int historyBufSize = Sampler_getNumSamplesInHistory();
+            memset(sendBuffer, 0, MAX_LEN);      //1024 bytes per buffer
 
             for (int i = 0; i < historyBufSize; i++)    //print all elements
             {
@@ -134,6 +134,7 @@ static void* udpCommandThread(void *vargp)
                         strcat(sendBuffer, "\n");  
                     }
                 sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
+                memset(sendBuffer, 0, MAX_LEN);
                 }
             }
             free(historyBuf);
@@ -159,7 +160,7 @@ static void* udpCommandThread(void *vargp)
             char *startOfN = recvBuffer + 4;            // 4th position is the start of n
             int n = atoi(startOfN);
             double *historyBuf = Sampler_getHistoryInOrder(n);
-            int historyBufSize = Sampler_getHistorySize();
+            int historyBufSize = Sampler_getNumSamplesInHistory();
             memset(sendBuffer, 0, MAX_LEN);             // 1024 bytes per buffer
 
             if (n > historyBufSize)                     // edge case handling: n too big
@@ -197,6 +198,8 @@ static void* udpCommandThread(void *vargp)
             sprintf(sendBuffer, "Unknown command.\n");
 			sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
         }
+        memset(recvBuffer, 0, MAX_LEN);
+        memset(sendBuffer, 0, MAX_LEN);
     }
     close(socketDescriptor);
     return 0;
