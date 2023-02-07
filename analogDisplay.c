@@ -2,6 +2,7 @@
 #include "include/terminal.h"
 #include "include/potentiometer.h"
 #include "include/analogDisplay.h"
+#include "include/milliSleep.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,7 +38,6 @@
 #define REG_OUTB 0x15
 
 static void* dipHistoryToDisplay(void *vargp);
-static int msleep(long msec);
 
 static pthread_t anDisplayThreadID;
 static bool isDisplaying;
@@ -117,7 +117,7 @@ static int init_display()
 {
 	runCommand("config-pin P9_18 i2c");         //config pins
 	runCommand("config-pin P9_17 i2c");
-	msleep(350);
+	sleepForMs(350);
 
 	DIR *gpio61Dir = opendir("/sys/class/gpio/gpio61/");
 	if (ENOENT == errno)
@@ -250,40 +250,20 @@ static void* dipHistoryToDisplay(void *vargp)
 			second_digit= 9;
 		}	
        	
-		editReading(first_val,"0");             	//set value to on
-		editReading(second_val,"1");				// first digit (upper and lower halfs)
-		msleep(5);									// sleep 5 ms after turning on per guide
+		editReading(first_val,"0");             	//set value to off
+		editReading(second_val,"0");				// first digit (upper and lower halfs)
         writeI2cReg(i2cFileDesc, REG_OUTA, lowerRegisterVal_Hex(first_digit));
         writeI2cReg(i2cFileDesc, REG_OUTB, upperRegisterVal_Hex(first_digit));
 		editReading(first_val,"1");             	//set value to on
+		sleepForMs(5);									// sleep 5 ms after turning on per guide
+
+		editReading(first_val, "0");
 		editReading(second_val,"0");
-		msleep(5);
 		writeI2cReg(i2cFileDesc, REG_OUTA, lowerRegisterVal_Hex(second_digit));
         writeI2cReg(i2cFileDesc, REG_OUTB, upperRegisterVal_Hex(second_digit));
+		editReading(second_val,"1");
+		sleepForMs(5);
     }
 	close(i2cFileDesc);     						//cleanup i2c access
     return 0;
-}
-
-// taken from https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
-// sleep for x ms
-static int msleep(long msec)
-{
-    struct timespec ts;
-    int res;
-
-    if (msec < 0)
-    {
-        errno = EINVAL;
-        return -1;
-    }
-
-    ts.tv_sec = msec / 1000;
-    ts.tv_nsec = (msec % 1000) * 1000000;
-
-    do {
-        res = nanosleep(&ts, &ts);
-    } while (res && errno == EINTR);
-
-    return res;
 }

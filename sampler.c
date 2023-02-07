@@ -3,6 +3,7 @@
 #include "include/photoresistor.h"
 #include "include/circularBuffer.h"
 #include "include/periodTimer.h"
+#include "include/milliSleep.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,9 +18,6 @@
 #define EXPONENTIAL_WEIGHTING_VALUE 0.001   //prev average weighed at 99.9%
 #define LIGHT_DIP_DIFFERENCE_V 0.1          //volts
 #define HYSTERESIS_CONSTANT 0.03            //volts
-
-// temp test function
-static int msleep(long msec);
 
 // Function for the thread to sample the POT and update the buffer size.
 static void* potThread(void *vargp);
@@ -229,31 +227,8 @@ static void* lightSamplingThread(void *vargp)
         totalSamples += 1;
         update_Average_Reading(current_lightRead_voltage);
 
-        msleep(1);
+        sleepForMs(1);
     }
     printf("Sampling of photoresistor has now stopped.\n");
     return 0;
-}
-
-// for testing, replace with provided timing code later
-// taken from https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
-static int msleep(long msec)
-{
-    struct timespec ts;
-    int res;
-
-    if (msec < 0)
-    {
-        errno = EINVAL;
-        return -1;
-    }
-
-    ts.tv_sec = msec / 1000;
-    ts.tv_nsec = (msec % 1000) * 1000000;
-
-    do {
-        res = nanosleep(&ts, &ts);
-    } while (res && errno == EINTR);
-
-    return res;
 }
