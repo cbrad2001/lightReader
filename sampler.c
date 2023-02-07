@@ -144,7 +144,7 @@ int Sampler_analyzeDips()
     int dipCount = 0;
     bool dipAvailable = true;
     int bufSize = Sampler_getNumSamplesInHistory();
-    double* validHistory = Sampler_getHistory(bufSize);
+    double* validHistory = Sampler_getHistoryInOrder(bufSize);
     double currAvg = Sampler_getAverageReading();
 
     for (int i = 0; i < bufSize - 1; i++)
@@ -154,14 +154,18 @@ int Sampler_analyzeDips()
             break; // unlikely this will ever trigger
         }
 
-        bool isDip = (validHistory[i] - HYSTERESIS_CONSTANT <= (currAvg - LIGHT_DIP_DIFFERENCE_V)) && 
-            (validHistory[i] + HYSTERESIS_CONSTANT <= (currAvg - LIGHT_DIP_DIFFERENCE_V)); // check for hysterisis bounds
+        // bool isDip = (validHistory[i] - HYSTERESIS_CONSTANT <= (currAvg - LIGHT_DIP_DIFFERENCE_V)) && 
+        //     (validHistory[i] + HYSTERESIS_CONSTANT <= (currAvg - LIGHT_DIP_DIFFERENCE_V)); // check for hysterisis bounds
+        
+        bool isDip = (validHistory[i] <= (currAvg - LIGHT_DIP_DIFFERENCE_V));
+        bool notDip = (validHistory[i] >= (currAvg - LIGHT_DIP_DIFFERENCE_V + HYSTERESIS_CONSTANT));
+
         if (isDip && dipAvailable)
         {
             dipCount += 1;
             dipAvailable = false;
         }
-        else if (!isDip)
+        else if (notDip)
         {
             dipAvailable = true;
         }
