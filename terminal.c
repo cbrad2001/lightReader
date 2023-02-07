@@ -9,7 +9,6 @@
 #include <pthread.h>
 #include <unistd.h>
 
-
 static pthread_t termThreadID;
 static bool isPrinting;
 static long long prevSampleSum; 
@@ -37,8 +36,8 @@ void Terminal_quit()
 //thread repeatedly outputs specified data to screen at a 1 second rate
 static void* print_to_terminal(void *vargp)
 {
-    while(isPrinting){
-        Period_statistics_t stats; 
+    while(isPrinting){  //collect relevant information from other modules for reporting.
+        Period_statistics_t stats;          
         long long totalSamples = Sampler_getNumSamplesTaken();
         long long sampleVal_lastS = totalSamples - prevSampleSum;
         prevSampleSum += sampleVal_lastS;
@@ -47,7 +46,7 @@ static void* print_to_terminal(void *vargp)
         double avg_light = Sampler_getAverageReading();
         int dips = Sampler_analyzeDips();
 
-        Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &stats);
+        Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &stats);    //fill stats struct with data
 
         //line 1: ( # light samples in last second) | (raw pot value) | (num valid samples in history) | (avg light 3dp) | (# dips) | (# samples in buffer)
         printf("# Samples/s): %lli \t" 

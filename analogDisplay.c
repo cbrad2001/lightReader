@@ -28,8 +28,8 @@
 #define first_dir  "/sys/class/gpio/gpio61/direction"    //set out
 #define second_dir "/sys/class/gpio/gpio44/direction"   //set out
 
-#define first_val "/sys/class/gpio/gpio61/value"    //set #
-#define second_val "/sys/class/gpio/gpio44/value"   //set #
+#define first_val "/sys/class/gpio/gpio61/value"    	//set #
+#define second_val "/sys/class/gpio/gpio44/value"   	//set #
     // we both have green capes
 #define REG_DIRA 0x00
 #define REG_DIRB 0x01
@@ -61,7 +61,7 @@ static void editReading(char* fileName, char* val)
 	fclose(pfile);
 }
 
-//provided code by I2C guide
+// provided code by I2C guide
 static int initI2cBus(char* bus, int address)
 {
 	int i2cFileDesc = open(bus, O_RDWR);
@@ -73,7 +73,7 @@ static int initI2cBus(char* bus, int address)
 	}
 	return i2cFileDesc;
 }
-
+// provided code by I2C guide
 static void writeI2cReg(int i2cFileDescr, unsigned char regAddr, unsigned char value)
 {
 	unsigned char buff[2];
@@ -86,7 +86,7 @@ static void writeI2cReg(int i2cFileDescr, unsigned char regAddr, unsigned char v
 		exit(-1);
 	}
 }
-
+// provided code by I2C guide
 static void runCommand(char* command) {    
 	// Execute the shell command (output into pipe)    
 	FILE *pipe = popen(command, "r");    
@@ -111,7 +111,8 @@ static void runCommand(char* command) {
 
 // SETUP:
 
-//complete the steps from the I2C guide (2.3) to config the board to read values 
+// complete the steps from the I2C guide (2.3) to config the board to read values 
+// configures the pin, creates the file descriptor and sets the register values
 static int init_display()
 {
 	runCommand("config-pin P9_18 i2c");         //config pins
@@ -149,12 +150,13 @@ static int init_display()
     return i2cFileDesc;
 }
 
+/**
+ * Main running code
+*/
 void Analog_quit()
 {
     isDisplaying = false;
 }
-
-// Running code: 
 
 void Analog_startDisplaying(void)
 {
@@ -170,7 +172,9 @@ void Analog_stopDisplaying(void)
     pthread_join(anDisplayThreadID, NULL);
 }
 
-static int firstDigit_Hex(int val)
+//lower 8 bits associated with register 0x14.... 
+//to be called with REG_OUTA
+static int lowerRegisterVal_Hex(int val)
 {
     switch (val){
 		case 0:
@@ -198,7 +202,9 @@ static int firstDigit_Hex(int val)
 	}
 }
 
-static int secondDigit_Hex(int val)
+//top 8 bits associated with register 0x15.... 
+//to be called with REG_OUTB
+static int upperRegisterVal_Hex(int val)
 {
     switch (val){
 		case 0:
@@ -234,7 +240,6 @@ static void* dipHistoryToDisplay(void *vargp)
 	isDisplaying = true;
     while(isDisplaying)
 	{
-        
         int num_to_display = Sampler_analyzeDips();
         int first_digit = num_to_display / 10;  	//moves the decimal place one to the left
         int second_digit = num_to_display % 10; 	//extracts the first num
@@ -248,13 +253,13 @@ static void* dipHistoryToDisplay(void *vargp)
 		editReading(first_val,"0");             	//set value to on
 		editReading(second_val,"1");				// first digit (upper and lower halfs)
 		msleep(5);									// sleep 5 ms after turning on per guide
-        writeI2cReg(i2cFileDesc, REG_OUTA, firstDigit_Hex(first_digit));
-        writeI2cReg(i2cFileDesc, REG_OUTB, secondDigit_Hex(first_digit));
+        writeI2cReg(i2cFileDesc, REG_OUTA, lowerRegisterVal_Hex(first_digit));
+        writeI2cReg(i2cFileDesc, REG_OUTB, upperRegisterVal_Hex(first_digit));
 		editReading(first_val,"1");             	//set value to on
 		editReading(second_val,"0");
 		msleep(5);
-		writeI2cReg(i2cFileDesc, REG_OUTA, firstDigit_Hex(second_digit));
-        writeI2cReg(i2cFileDesc, REG_OUTB, secondDigit_Hex(second_digit));
+		writeI2cReg(i2cFileDesc, REG_OUTA, lowerRegisterVal_Hex(second_digit));
+        writeI2cReg(i2cFileDesc, REG_OUTB, upperRegisterVal_Hex(second_digit));
     }
 	close(i2cFileDesc);     						//cleanup i2c access
     return 0;

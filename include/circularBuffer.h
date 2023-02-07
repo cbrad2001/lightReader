@@ -8,6 +8,7 @@
 
 #define INVALID_VAL DBL_MAX
 
+//concept inspired by:
 //https://embedjournal.com/implementing-circular-buffer-embedded-c/ 
 typedef struct circular_buffer
 {

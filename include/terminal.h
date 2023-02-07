@@ -9,7 +9,7 @@
 void Terminal_startPrinting(void);
 void Terminal_stopPrinting(void);
 
-//trigger udp shutdown
+//trigger udp shutdown - swap loop state to false for exit
 void Terminal_quit(void);
 
 #endif

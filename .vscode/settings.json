@@ -11,6 +11,7 @@
         "analogdisplay.h": "c",
         "string.h": "c",
         "udpcomms.h": "c",
-        "periodtimer.h": "c"
+        "periodtimer.h": "c",
+        "photoresistor.h": "c"
     }
 }

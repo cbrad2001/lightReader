@@ -13,6 +13,7 @@ typedef enum status
     FAIL
 } status;
 
+//Fills contents of double array with the max dbl value; used later as key for invalid
 static void dbl_memset(double *buffer, size_t size){
     double max = INVALID_VAL;
     for (size_t i = 0; i < size; i++){
@@ -32,6 +33,7 @@ void CircBuff_buffInit(circular_buffer *buffer, size_t size)
     printf("Successfully initialized buffer of size %d\n", buffer->maxBufferSize);
 }
 
+// Adds light reading data to the buffer, returns success if it works
 static status buffer_pushback(circular_buffer *b, double pr_reading)
 {
     if (b->maxBufferSize == 0)
@@ -64,11 +66,10 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 {
     // use of int to avoid underflow from counting backwards
     int oldBufSize = buffer->maxBufferSize;
-    if (size < oldBufSize + 2 && size > oldBufSize - 2) { return; }    // hysteresis value of +-2
+    if (size < oldBufSize + 2 && size > oldBufSize - 2) { return; } // hysteresis value of +-2
 
     double *oldBuf = buffer->historyBuffer;
-
-    if (size == 0)
+    if (size == 0)                                          // case: new size is 0, need to set all contents back to 0
     {
         buffer->head = 0;
         buffer->maxBufferSize = 0;
@@ -78,8 +79,7 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
         oldBuf = NULL;
         return;
     }
-
-    double *newBuf = (double*)malloc(size * sizeof(double));
+    double *newBuf = (double*)malloc(size * sizeof(double));// create a new array to copy existing contents into
     dbl_memset(newBuf, size);
 
     int destPos = (size > oldBufSize) ? (oldBufSize - 1) : (size - 1);
@@ -91,14 +91,14 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
             newBuf[i] = oldBuf[i];
         }
     }
-    else // take the most recent M samples on buffer size decrease
+    else                                                    // scaling down... take the most recent M samples on buffer size decrease
     {
         while (destPos >= 0)
         {
             newBuf[destPos] = oldBuf[sourcePos];
             if (sourcePos == 0)
             {
-                sourcePos = oldBufSize - 1; // loop back to end of array and continue copying
+                sourcePos = oldBufSize - 1;                 // loop back to end of array and continue copying
             }
             else
             {
@@ -108,7 +108,7 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
         }
     }
 
-    if (size > oldBufSize)
+    if (size > oldBufSize)                                  //scaling up - take all samples and add extra space
     {
         if (oldBufSize > 0)
         {
@@ -122,7 +122,7 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
     }
     else
     {
-        buffer->head = 0; // buffer is full so just start from the front
+        buffer->head = 0;                                   // buffer is full so just start from the front
         buffer->validItemCount = size;
     }
     buffer->maxBufferSize = size;
@@ -133,7 +133,7 @@ void CircBuff_buffResize(circular_buffer *buffer, size_t size)
 
 void CircBuff_addData(circular_buffer *buffer, double pr_reading)
 {
-    if (buffer_pushback(buffer,pr_reading) == FAIL)
+    if (buffer_pushback(buffer,pr_reading) == FAIL)         // global to be called from other modules, verify before entering add state
     {
         printf("Error loading to buffer\n");
     }

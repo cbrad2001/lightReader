@@ -18,15 +18,15 @@ int Pot_getRawValue(void)
 
     const int MAX_LENGTH = 1024;
     char buf[MAX_LENGTH];
-    fgets(buf, MAX_LENGTH, potVoltageFile);
+    fgets(buf, MAX_LENGTH, potVoltageFile); //get voltage reading from file, place in buffer
     fclose(potVoltageFile);
-    int voltageVal = atoi(buf); // Potential TODO: error check atoi
+    int voltageVal = atoi(buf);
 
     if (fileStatus == false)
     {
         voltageVal = -1;
     }
-    return voltageVal;
+    return voltageVal;                      
 }
 
 double Pot_getVoltage(void)
@@ -39,7 +39,7 @@ double Pot_getVoltage(void)
         exit(1);
         return -1;
     }
-    const int MAX_VALUE = 4095;
+    const int MAX_VALUE = 4095;     
     const double REF_VOLT = 1.8;
     double voltage = ((double)rawValue / MAX_VALUE) * REF_VOLT;
 
