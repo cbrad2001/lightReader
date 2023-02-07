@@ -198,7 +198,7 @@ double* Sampler_getHistoryInOrder(int length)
     double* bufCopy;
     pthread_mutex_lock(&historyBufferMutex);
     {
-        bufCopy = CircuBuff_getCopyInOrder(&buffer, length);
+        bufCopy = CircBuff_getCopyInOrder(&buffer, length);
     }
     pthread_mutex_unlock(&historyBufferMutex);
     return bufCopy;

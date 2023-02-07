@@ -14,9 +14,9 @@
 #include <pthread.h>
 #include <sys/socket.h>
 
-//run: netcat -u 192.168.7.2 12345
+//run: netcat -u 192.168.7.2 12233
 
-#define PORT 12345
+#define PORT 12233
 #define MAX_LEN 1024
 #define INVALID_VAL DBL_MAX
 
@@ -120,26 +120,25 @@ static void* udpCommandThread(void *vargp)
             int historySize = Sampler_getHistorySize();
             double *historyBuf = Sampler_getHistoryInOrder(historySize);
             int historyBufSize = Sampler_getHistorySize();
-            sprintf(sendBuffer, "Buffer History :\n");
+            memset(sendBuffer, 0, historyBufSize); // 1024 bytes per buffer
 
             for (int i = 0; i < historyBufSize; i++)    //print all elements
-                {
+            {
                 double val = historyBuf[i];
+                
                 if (val != INVALID_VAL)
                 {
-                    char currVal[MAX_LEN];
-                    sprintf(currVal, "%.3f, ", val);
-                    strcat(sendBuffer, currVal);   // TODO: split and send UDP packets
-                }
-                if (i % 20 == 0)     //newline every 10th index for clarity
-                {
-                    strcat(sendBuffer, "\n");   // need to handle multiple packet case
+                    sprintf(sendBuffer, "%.3f, ", val);
+                    if ((i+1) % 20 == 0)     //newline every 10th index for clarity
+                    {
+                        strcat(sendBuffer, "\n");   // need to handle multiple packet case
                                                 // might be easier to just sent a new packet every 20?
+                    }
+                sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
                 }
             }
-            if (historyBufSize%10 != 0)
-                strcat(sendBuffer, "\n");
-            
+            char* newln = "\n";
+            sendto(socketDescriptor,newln, strnlen(newln,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
             free(historyBuf);
         }
 
@@ -169,12 +168,18 @@ static void* udpCommandThread(void *vargp)
                 while (currentPos < n)
                 {
                     // 7 characters sent per sample
-                    snprintf(sendBuffer, "%.3d, ", historyBuf[currentPos]);
+                    sprintf(sendBuffer, "%.3f, ", historyBuf[currentPos]);
+                    if ((currentPos+1) % 20 == 0)
+                    {
+                        strcat(sendBuffer, "\n");
+                    }
                     sendto(socketDescriptor,sendBuffer, strnlen(sendBuffer,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
                     memset(sendBuffer, 0, MAX_LEN);
                     currentPos += 1;
                 }
             }
+            char* newln = "\n";
+            sendto(socketDescriptor,newln, strnlen(newln,MAX_LEN),0,(struct sockaddr *) &sock, sock_sz);
             free(historyBuf);
         }
 
