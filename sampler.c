@@ -211,6 +211,7 @@ static void* potThread(void *vargp)
     while (isSampling)
     {
         int sz = Pot_getRawValue();
+        if (sz == 0) { sz = 1; }
         Sampler_setHistorySize(sz);  // count potentiometer value
         sleep(1);
     }
